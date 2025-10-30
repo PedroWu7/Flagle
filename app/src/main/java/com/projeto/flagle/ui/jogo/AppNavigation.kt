@@ -10,8 +10,8 @@ import com.projeto.flagle.data.local.AppDatabase
 import com.projeto.flagle.data.repository.BandeirasRepository
 import com.projeto.flagle.ui.jogo.BandeirasViewModel
 import com.projeto.flagle.ui.jogo.BandeirasViewModelFactory
-import com.projeto.flagle.ui.jogo.TelaCadastroBandeiras // Importe sua tela
-import com.projeto.flagle.ui.jogo.TelaJogo // Importe sua tela
+import com.projeto.flagle.ui.jogo.TelaCadastroBandeiras
+import com.projeto.flagle.ui.jogo.TelaJogo
 
 @Composable
 fun AppNavigation() {
@@ -21,29 +21,23 @@ fun AppNavigation() {
     val repository = BandeirasRepository(AppDatabase.getDatabase(context).bandeirasDAO())
     val viewModelFactory = BandeirasViewModelFactory(repository)
 
-    // Este ViewModel será compartilhado
     val viewModel: BandeirasViewModel = viewModel(factory = viewModelFactory)
 
     NavHost(navController = navController, startDestination = "jogo") {
 
-        // --- TELA DE JOGO ---
         composable("jogo") {
-            // 1. PASSA O VIEWMODEL COMPARTILHADO
             TelaJogo(
                 viewModel = viewModel,
-                // 2. PASSA A AÇÃO DE NAVEGAR
                 onNavigateToCadastro = {
                     navController.navigate("cadastro")
                 }
             )
         }
 
-        // --- TELA DE CADASTRO ---
+
         composable("cadastro") {
-            // 1. PASSA O MESMO VIEWMODEL COMPARTILHADO
             TelaCadastroBandeiras(
                 viewModel = viewModel,
-                // 2. PASSA A AÇÃO DE VOLTAR
                 onNavigateBack = {
                     navController.popBackStack()
                 }

@@ -39,27 +39,22 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.projeto.flagle.data.local.Bandeiras
 
-/**
- * ATUALIZADO: Agora esta tela recebe o ViewModel e a função de voltar
- * em vez de criá-los.
- */
-@OptIn(ExperimentalMaterial3Api::class) // Necessário para a TopAppBar
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TelaCadastroBandeiras(
     viewModel: BandeirasViewModel,
-    onNavigateBack: () -> Unit // Ação para voltar para a tela anterior
+    onNavigateBack: () -> Unit
 ) {
-    // Usa o ViewModel compartilhado que foi recebido
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = Modifier.padding(10.dp),
         topBar = {
-            // --- NOVO: Barra superior com botão de voltar ---
             TopAppBar(
                 title = { Text("Cadastrar Bandeiras") },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) { // Chama a ação de voltar
+                    IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Voltar"
@@ -72,7 +67,7 @@ fun TelaCadastroBandeiras(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(it), // Usa o padding do Scaffold
+                .padding(it),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
@@ -114,7 +109,7 @@ fun TelaCadastroBandeiras(
                         modifier = Modifier.align(Alignment.End),
                         onClick = { viewModel.onSalvar() }
                     ) {
-                        Text(uiState.textoBotao) // Usa o texto dinâmico
+                        Text(uiState.textoBotao)
                     }
                 }
             }
@@ -149,21 +144,18 @@ fun UmaBandeira(bandeira: Bandeiras, onEdit: (Bandeiras) -> Unit, onDelete: (Ban
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
 
-            // Coluna para nome e descrição
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = bandeira.nome, style = MaterialTheme.typography.titleMedium)
-                // Ocultando a URL completa para não poluir
                 Text(
                     text = bandeira.url_imagem,
                     style = MaterialTheme.typography.bodySmall,
-                    maxLines = 1, // Mostra apenas 1 linha
+                    maxLines = 1,
                 )
                 Text(text = bandeira.continente, style = MaterialTheme.typography.bodySmall)
             }
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            // Ícones de ação
             Icon(
                 imageVector = Icons.Default.Edit,
                 contentDescription = "Editar",
@@ -189,16 +181,10 @@ fun UmaBandeira(bandeira: Bandeiras, onEdit: (Bandeiras) -> Unit, onDelete: (Ban
 }
 
 
-/**
- * Preview pode não funcionar corretamente agora, pois depende de um ViewModel
- * sendo injetado.
- */
+
 @Preview
 @Composable
 fun TelaCadastroBandeirasPreview() {
-    // Esta preview é apenas para layout, não terá lógica funcional
-    // TelaCadastroBandeiras(viewModel = ???, onNavigateBack = {})
-    // Para testar o layout visualmente, você pode criar uma "fake"
-    // UmaBandeira(bandeira = Bandeiras(nome="BRASIL", url_imagem="url.com", continente="AMERICA"), onEdit = {}, onDelete = {})
+
 }
 
