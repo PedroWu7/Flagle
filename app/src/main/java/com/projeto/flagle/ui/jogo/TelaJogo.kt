@@ -72,12 +72,57 @@ fun TelaJogo(
                     "FLAGLE",
                     style = MaterialTheme.typography.displayMedium,
                     color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(vertical = 32.dp)
+                    // --- MODIFICADO ---
+                    modifier = Modifier.padding(top = 32.dp) // Reduzido padding vertical
+                    // --- FIM DA MODIFICAÇÃO ---
                 )
+
+                // --- INÍCIO: SELETOR DE DIFICULDADE ---
+                Spacer(modifier = Modifier.height(24.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(0.9f),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Botão FÁCIL
+                    val isFacil = uiState.modoDificuldade == "FACIL"
+                    val facilButton: @Composable () -> Unit = {
+                        Text("FÁCIL")
+                    }
+
+                    if (isFacil) {
+                        Button(onClick = { /* Já selecionado */ }, modifier = Modifier.weight(1f)) {
+                            facilButton()
+                        }
+                    } else {
+                        OutlinedButton(onClick = { viewModel.onModoDificuldadeChange("FACIL") }, modifier = Modifier.weight(1f)) {
+                            facilButton()
+                        }
+                    }
+
+                    // Botão DIFÍCIL
+                    val isDificil = uiState.modoDificuldade == "DIFICIL"
+                    val dificilButton: @Composable () -> Unit = {
+                        Text("DIFÍCIL")
+                    }
+
+                    if (isDificil) {
+                        Button(onClick = { /* Já selecionado */ }, modifier = Modifier.weight(1f)) {
+                            dificilButton()
+                        }
+                    } else {
+                        OutlinedButton(onClick = { viewModel.onModoDificuldadeChange("DIFICIL") }, modifier = Modifier.weight(1f)) {
+                            dificilButton()
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+                // --- FIM: SELETOR DE DIFICULDADE ---
+
 
                 // --- Dropdown para selecionar o continente ---
                 var isMenuExpanded by remember { mutableStateOf(false) }
 
+                // --- CÓDIGO RESTAURADO ---
                 ExposedDropdownMenuBox(
                     expanded = isMenuExpanded,
                     onExpandedChange = { isMenuExpanded = it },
@@ -111,11 +156,11 @@ fun TelaJogo(
                         }
                     }
                 }
-                // --- FIM do Dropdown ---
+                // --- FIM DO CÓDIGO RESTAURADO ---
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // --- MODIFICADO: Agora usa a nova bandeira com cobertura ---
+                // --- CÓDIGO RESTAURADO ---
                 Bandeira(
                     url_imagem = uiState.bandeiraSorteada?.url_imagem ?: "",
                     quadradosRevelados = uiState.quadradosRevelados, // Passa o novo estado
@@ -123,10 +168,11 @@ fun TelaJogo(
                         .fillMaxWidth(0.9f)
                         .height(200.dp)
                 )
-                // --- FIM DA MODIFICAÇÃO ---
+                // --- FIM DO CÓDIGO RESTAURADO ---
 
                 Spacer(modifier = Modifier.height(32.dp))
 
+                // --- CÓDIGO RESTAURADO ---
                 OutlinedTextField(
                     value = uiState.palpiteUsuario.uppercase(),
                     onValueChange = { viewModel.onPalpiteChange(it) },
@@ -136,10 +182,11 @@ fun TelaJogo(
                     leadingIcon = { Icon(Icons.Default.Settings, "Palpite") },
                     singleLine = true
                 )
+                // --- FIM DO CÓDIGO RESTAURADO ---
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-
+                // --- CÓDIGO RESTAURADO ---
                 val isCorrect = uiState.mensagemResultado.startsWith("Correto")
                 val resultColor = if (uiState.mensagemResultado.isEmpty()) {
                     Color.Transparent
@@ -155,28 +202,32 @@ fun TelaJogo(
                     color = resultColor,
                     modifier = Modifier.height(30.dp)
                 )
+                // --- FIM DO CÓDIGO RESTAURADO ---
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // --- CÓDIGO RESTAURADO E CORRIGIDO ---
                 Row(
                     modifier = Modifier.fillMaxWidth(0.9f),
                     horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally)
                 ) {
                     OutlinedButton(
-                        onClick = { viewModel.sortearNovaBandeira() },
+                        onClick = { viewModel.sortearNovaBandeira() }, // <-- ERRO CORRIGIDO
                         modifier = Modifier.weight(1f)
                     ) {
                         Text("Pular")
                     }
                     Button(
-                        onClick = { viewModel.verificarPalpite() },
+                        onClick = { viewModel.verificarPalpite() }, // <-- CÓDIGO RESTAURADO
                         modifier = Modifier.weight(1f)
                     ) {
                         Text("Adivinhar")
                     }
                 }
+                // --- FIM DO CÓDIGO RESTAURADO ---
             }
 
+            // --- CÓDIGO RESTAURADO ---
             TextButton(
                 onClick = onNavigateToCadastro,
                 modifier = Modifier
@@ -192,12 +243,13 @@ fun TelaJogo(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Gerenciar Bandeiras")
             }
+            // --- FIM DO CÓDIGO RESTAURADO ---
         }
     }
 }
 
 
-// --- COMPOSABLE DA BANDEIRA TOTALMENTE REFEITO ---
+// --- COMPOSABLE DA BANDEIRA (CÓDIGO RESTAURADO) ---
 @Composable
 private fun Bandeira(
     url_imagem: String,
@@ -216,6 +268,9 @@ private fun Bandeira(
 
     // 2. Determina quais índices (0-5) devem estar visíveis
     //    com base no número de quadrados revelados.
+    //    Esta lógica já funciona:
+    //    - Modo Fácil: quadradosRevelados = 6 -> take(6) -> Mostra todos
+    //    - Modo Difícil: quadradosRevelados = 0 -> take(0) -> Mostra 0
     val indicesVisiveis = remember(quadradosRevelados, indicesEmbaralhados) {
         indicesEmbaralhados.take(quadradosRevelados).toSet()
     }
@@ -285,7 +340,7 @@ private fun Bandeira(
         }
     }
 }
-// --- FIM DO NOVO COMPOSABLE ---
+// --- FIM DO CÓDIGO RESTAURADO ---
 
 
 @Preview
