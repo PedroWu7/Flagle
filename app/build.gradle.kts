@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.devtools.ksp")
+    id("com.google.gms.google-services") version "4.4.4"
 }
 
 android {
@@ -50,6 +51,9 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.firebase.auth.ktx)
+    implementation(libs.firebase.common.ktx)
+    implementation(libs.firebase.auth.common)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -75,5 +79,15 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.0")
 
     implementation(libs.androidx.navigation.compose)
+
+    val firebaseBom = platform("com.google.firebase:firebase-bom:32.7.0") // Verifique a versão mais recente
+    implementation(firebaseBom)
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
+    implementation(platform("com.google.firebase:firebase-bom:34.5.0"))
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-auth-ktx")
+
 
 }

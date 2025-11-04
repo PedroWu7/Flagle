@@ -1,8 +1,17 @@
 package com.projeto.flagle.ui.jogo
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.auth
 import com.projeto.flagle.data.local.Bandeiras
 import com.projeto.flagle.data.repository.BandeirasRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,6 +20,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay // <-- IMPORT ADICIONADO
+// ... outras importações ...
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+
+// --- NOVAS IMPORTAÇÕES NECESSÁRIAS PARA O GOOGLE SIGN-IN E FIREBASE AUTH ---
+import com.google.android.gms.common.api.ApiException
+import com.google.firebase.auth.GoogleAuthProvider
+import androidx.compose.material3.Button // Para o Composable Button
+import androidx.compose.material3.Text // Para o Composable Text
 
 data class BandeirasUiState(
     val listaDeBandeiras: List<Bandeiras> = emptyList(),
