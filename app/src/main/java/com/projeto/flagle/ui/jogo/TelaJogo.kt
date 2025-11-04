@@ -15,10 +15,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+// --- IMPORTS CORRIGIDOS ---
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
+// --- FIM DOS IMPORTS ---
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -26,6 +32,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -46,83 +53,113 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 
-// Adicionamos a anotação OptIn para usar o ExposedDropdownMenuBox
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TelaJogo(
     viewModel: BandeirasViewModel,
-    onNavigateToCadastro: () -> Unit
+    onNavigateToCadastro: () -> Unit,
+    onNavigateToRanking: () -> Unit,
+    onNavigateToPontuacao: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val scrollState = rememberScrollState()
 
-    Scaffold { scaffoldPadding ->
+    Scaffold(
+        bottomBar = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // --- ÍCONES DA BOTTOM BAR CORRIGIDOS ---
+                TextButton(onClick = onNavigateToRanking) {
+                    Icon(
+                        Icons.Default.Settings, // Ícone correto
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Ranking")
+                }
+                TextButton(onClick = onNavigateToPontuacao) {
+                    Icon(
+                        Icons.Default.Info, // Ícone correto
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Pontos")
+                }
+                TextButton(onClick = onNavigateToCadastro) {
+                    Icon(
+                        Icons.Default.Settings, // Ícone correto
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Bandeiras")
+                }
+            }
+        }
+    ) { scaffoldPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(scaffoldPadding)
                 .padding(16.dp)
         ) {
+
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .align(Alignment.TopCenter),
+                    .align(Alignment.TopCenter)
+                    .verticalScroll(scrollState),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     "FLAGLE",
                     style = MaterialTheme.typography.displayMedium,
                     color = MaterialTheme.colorScheme.primary,
-                    // --- MODIFICADO ---
-                    modifier = Modifier.padding(top = 32.dp) // Reduzido padding vertical
-                    // --- FIM DA MODIFICAÇÃO ---
+                    modifier = Modifier.padding(vertical = 32.dp)
                 )
 
-                // --- INÍCIO: SELETOR DE DIFICULDADE ---
-                Spacer(modifier = Modifier.height(24.dp))
+                // Botões de Dificuldade
                 Row(
                     modifier = Modifier.fillMaxWidth(0.9f),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // Botão FÁCIL
-                    val isFacil = uiState.modoDificuldade == "FACIL"
-                    val facilButton: @Composable () -> Unit = {
-                        Text("FÁCIL")
+                    val modoFacil = uiState.modoDificil == false
+                    OutlinedButton(
+                        onClick = { viewModel.onModoDificuldadeChange(false) },
+                        modifier = Modifier.weight(1f),
+                        border = if (modoFacil) BorderStroke(
+                            2.dp,
+                            MaterialTheme.colorScheme.primary
+                        ) else ButtonDefaults.outlinedButtonBorder
+                    ) {
+                        Text("Fácil")
                     }
-
-                    if (isFacil) {
-                        Button(onClick = { /* Já selecionado */ }, modifier = Modifier.weight(1f)) {
-                            facilButton()
-                        }
-                    } else {
-                        OutlinedButton(onClick = { viewModel.onModoDificuldadeChange("FACIL") }, modifier = Modifier.weight(1f)) {
-                            facilButton()
-                        }
-                    }
-
-                    // Botão DIFÍCIL
-                    val isDificil = uiState.modoDificuldade == "DIFICIL"
-                    val dificilButton: @Composable () -> Unit = {
-                        Text("DIFÍCIL")
-                    }
-
-                    if (isDificil) {
-                        Button(onClick = { /* Já selecionado */ }, modifier = Modifier.weight(1f)) {
-                            dificilButton()
-                        }
-                    } else {
-                        OutlinedButton(onClick = { viewModel.onModoDificuldadeChange("DIFICIL") }, modifier = Modifier.weight(1f)) {
-                            dificilButton()
-                        }
+                    OutlinedButton(
+                        onClick = { viewModel.onModoDificuldadeChange(true) },
+                        modifier = Modifier.weight(1f),
+                        border = if (!modoFacil) BorderStroke(
+                            2.dp,
+                            MaterialTheme.colorScheme.primary
+                        ) else ButtonDefaults.outlinedButtonBorder
+                    ) {
+                        Text("Difícil")
                     }
                 }
-                Spacer(modifier = Modifier.height(24.dp))
-                // --- FIM: SELETOR DE DIFICULDADE ---
+                Spacer(modifier = Modifier.height(16.dp))
 
 
                 // --- Dropdown para selecionar o continente ---
                 var isMenuExpanded by remember { mutableStateOf(false) }
 
-                // --- CÓDIGO RESTAURADO ---
                 ExposedDropdownMenuBox(
                     expanded = isMenuExpanded,
                     onExpandedChange = { isMenuExpanded = it },
@@ -156,37 +193,32 @@ fun TelaJogo(
                         }
                     }
                 }
-                // --- FIM DO CÓDIGO RESTAURADO ---
+                // --- FIM do Dropdown ---
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // --- CÓDIGO RESTAURADO ---
                 Bandeira(
                     url_imagem = uiState.bandeiraSorteada?.url_imagem ?: "",
-                    quadradosRevelados = uiState.quadradosRevelados, // Passa o novo estado
+                    quadradosRevelados = uiState.quadradosRevelados,
                     modifier = Modifier
                         .fillMaxWidth(0.9f)
                         .height(200.dp)
                 )
-                // --- FIM DO CÓDIGO RESTAURADO ---
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // --- CÓDIGO RESTAURADO ---
                 OutlinedTextField(
                     value = uiState.palpiteUsuario.uppercase(),
                     onValueChange = { viewModel.onPalpiteChange(it) },
                     label = { Text("Qual é esta bandeira?") },
                     modifier = Modifier.fillMaxWidth(0.9f),
                     shape = RoundedCornerShape(12.dp),
-                    leadingIcon = { Icon(Icons.Default.Settings, "Palpite") },
                     singleLine = true
                 )
-                // --- FIM DO CÓDIGO RESTAURADO ---
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // --- CÓDIGO RESTAURADO ---
+
                 val isCorrect = uiState.mensagemResultado.startsWith("Correto")
                 val resultColor = if (uiState.mensagemResultado.isEmpty()) {
                     Color.Transparent
@@ -202,58 +234,38 @@ fun TelaJogo(
                     color = resultColor,
                     modifier = Modifier.height(30.dp)
                 )
-                // --- FIM DO CÓDIGO RESTAURADO ---
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // --- CÓDIGO RESTAURADO E CORRIGIDO ---
                 Row(
                     modifier = Modifier.fillMaxWidth(0.9f),
                     horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally)
                 ) {
                     OutlinedButton(
-                        onClick = { viewModel.sortearNovaBandeira() }, // <-- ERRO CORRIGIDO
+                        onClick = { viewModel.sortearNovaBandeira() },
                         modifier = Modifier.weight(1f)
                     ) {
                         Text("Pular")
                     }
                     Button(
-                        onClick = { viewModel.verificarPalpite() }, // <-- CÓDIGO RESTAURADO
+                        onClick = { viewModel.verificarPalpite() },
                         modifier = Modifier.weight(1f)
                     ) {
                         Text("Adivinhar")
                     }
                 }
-                // --- FIM DO CÓDIGO RESTAURADO ---
+                // Adiciona espaço extra na parte inferior para garantir que o scroll funcione
+                Spacer(modifier = Modifier.height(32.dp))
             }
-
-            // --- CÓDIGO RESTAURADO ---
-            TextButton(
-                onClick = onNavigateToCadastro,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 16.dp)
-            ) {
-
-                Icon(
-                    Icons.Default.Settings,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Gerenciar Bandeiras")
-            }
-            // --- FIM DO CÓDIGO RESTAURADO ---
         }
     }
 }
 
 
-// --- COMPOSABLE DA BANDEIRA (CÓDIGO RESTAURADO) ---
 @Composable
 private fun Bandeira(
     url_imagem: String,
-    quadradosRevelados: Int, // Novo parâmetro
+    quadradosRevelados: Int,
     modifier: Modifier = Modifier
 ) {
     val model = if (url_imagem.isEmpty()) {
@@ -262,17 +274,15 @@ private fun Bandeira(
         url_imagem
     }
 
-    // 1. Cria uma ordem de revelação embaralhada que é mantida
-    //    enquanto a URL da imagem não mudar.
     val indicesEmbaralhados = remember(url_imagem) { (0..5).toList().shuffled() }
 
-    // 2. Determina quais índices (0-5) devem estar visíveis
-    //    com base no número de quadrados revelados.
-    //    Esta lógica já funciona:
-    //    - Modo Fácil: quadradosRevelados = 6 -> take(6) -> Mostra todos
-    //    - Modo Difícil: quadradosRevelados = 0 -> take(0) -> Mostra 0
     val indicesVisiveis = remember(quadradosRevelados, indicesEmbaralhados) {
-        indicesEmbaralhados.take(quadradosRevelados).toSet()
+        // Se for 6 (modo fácil ou acerto), mostra tudo.
+        if (quadradosRevelados >= 6) {
+            (0..5).toSet()
+        } else {
+            indicesEmbaralhados.take(quadradosRevelados).toSet()
+        }
     }
 
     Card(
@@ -282,45 +292,38 @@ private fun Bandeira(
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            // 1. A IMAGEM (fica no fundo)
             AsyncImage(
                 model = model,
                 contentDescription = "Bandeira para adivinhar",
-                contentScale = ContentScale.Crop, // Crop é importante para preencher
+                contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
 
-            // 2. A GRADE DE COBERTURA (fica na frente da imagem)
+            // Grade de cobertura 2x3
             Column(modifier = Modifier.fillMaxSize()) {
-                // 2x3 Grid (2 linhas)
-                repeat(2) { rowIndex -> // rowIndex = 0, 1
+                repeat(2) { rowIndex ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .weight(1f) // Cada linha ocupa metade da altura
+                            .weight(1f)
                     ) {
-                        // 3 colunas
-                        repeat(3) { colIndex -> // colIndex = 0, 1, 2
-                            // Calcula o índice do quadrado (de 0 a 5)
+                        repeat(3) { colIndex ->
                             val quadradoIndex = (rowIndex * 3) + colIndex
                             val isVisivel = indicesVisiveis.contains(quadradoIndex)
 
-                            // O Quadrado de cobertura
                             Box(
                                 modifier = Modifier
                                     .fillMaxHeight()
-                                    .weight(1f) // Cada coluna ocupa 1/3 da largura
+                                    .weight(1f)
                                     .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.3f)))
                             ) {
-                                // Se NÃO estiver visível, desenha a cobertura
                                 if (!isVisivel) {
                                     Box(
                                         modifier = Modifier
                                             .fillMaxSize()
-                                            .background(MaterialTheme.colorScheme.surfaceVariant), // Cor da cobertura
+                                            .background(MaterialTheme.colorScheme.surfaceVariant),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        // Número do quadrado (opcional, mas ajuda o usuário)
                                         Text(
                                             text = "${quadradoIndex + 1}",
                                             style = MaterialTheme.typography.titleLarge,
@@ -330,8 +333,6 @@ private fun Bandeira(
                                         )
                                     }
                                 }
-                                // Se ESTIVER visível, não desenha nada,
-                                // revelando a imagem que está no fundo.
                             }
                         }
                     }
@@ -340,12 +341,70 @@ private fun Bandeira(
         }
     }
 }
-// --- FIM DO CÓDIGO RESTAURADO ---
 
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun TelaJogoPreview() {
-
+    // Preview estático que não depende do ViewModel
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+            .padding(16.dp)
+    ) {
+        Text("FLAGLE", style = MaterialTheme.typography.displayMedium)
+        Spacer(modifier = Modifier.height(16.dp))
+        Row {
+            OutlinedButton(onClick = { /* */ }, modifier = Modifier.weight(1f)) {
+                Text("Fácil")
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            OutlinedButton(onClick = { /* */ }, modifier = Modifier.weight(1f)) {
+                Text("Difícil")
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        OutlinedTextField(
+            value = "TODOS",
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Continente") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .background(Color.Gray),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("Placeholder Bandeira")
+        }
+        Spacer(modifier = Modifier.height(32.dp))
+        OutlinedTextField(
+            value = "",
+            onValueChange = {},
+            label = { Text("Qual é esta bandeira?") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            "Errado! Tente novamente.",
+            color = MaterialTheme.colorScheme.error,
+            style = MaterialTheme.typography.titleMedium
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Row {
+            OutlinedButton(onClick = { /* */ }, modifier = Modifier.weight(1f)) {
+                Text("Pular")
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Button(onClick = { /* */ }, modifier = Modifier.weight(1f)) {
+                Text("Adivinhar")
+            }
+        }
+    }
 }
 

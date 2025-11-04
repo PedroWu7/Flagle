@@ -11,16 +11,18 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+// Atualizado para usar as cores Azuis
+val DarkColorScheme = darkColorScheme(
+    primary = Blue80,
+    secondary = BlueGrey80,
+    tertiary = Aqua80
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
+// Atualizado para usar as cores Azuis
+val LightColorScheme = lightColorScheme(
+    primary = Blue40,
+    secondary = BlueGrey40,
+    tertiary = Aqua40
 
     /* Other default colors to override
     background = Color(0xFFFFFBFE),
@@ -56,3 +58,4 @@ fun FlagleTheme(
         content = content
     )
 }
+

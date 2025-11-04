@@ -2,10 +2,13 @@ package com.projeto.flagle.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+// Cores Azuis (Dark Theme)
+val Blue80 = Color(0xFFB1C5FF)
+val BlueGrey80 = Color(0xFFC3C6D8)
+val Aqua80 = Color(0xFF4DD9EB)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+// Cores Azuis (Light Theme)
+val Blue40 = Color(0xFF3B5BBD)
+val BlueGrey40 = Color(0xFF5A5F71)
+val Aqua40 = Color(0xFF006874)
+
