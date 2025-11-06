@@ -54,7 +54,10 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.play.services.games)
-    implementation(libs.firebase.auth.ktx)
+
+    // --- LINHA PROBLEMÁTICA REMOVIDA ---
+    // implementation(libs.firebase.auth.ktx) // <-- REMOVIDA
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -98,4 +101,8 @@ dependencies {
     // 3. Para o Login com Google (Necessário para a ETAPA 4)
     implementation("com.google.android.gms:play-services-auth:21.2.0")
     // (Note que esta não faz parte do BoM, por isso especificamos a versão)
+
+    // --- ADICIONADO AQUI ---
+    // Para usar .await() em vez de callbacks (no AuthRepository)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
 }
