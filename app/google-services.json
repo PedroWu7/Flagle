@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "110689919129",
+    "project_id": "flagle-174a3",
+    "storage_bucket": "flagle-174a3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:110689919129:android:cd63638c60f09fed7c9808",
+        "android_client_info": {
+          "package_name": "com.projeto.flagle"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "110689919129-55rsj68qntqcvie959gt3nakn7tif45t.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBu_wvXOLPoA9LIYDpx7xqkWxoelGo95Z4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "110689919129-55rsj68qntqcvie959gt3nakn7tif45t.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
