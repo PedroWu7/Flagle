@@ -18,11 +18,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-// --- IMPORTS CORRIGIDOS ---
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
-// --- FIM DOS IMPORTS ---
+import androidx.compose.material.icons.filled.Star // Adicionado (Padrão)
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -77,7 +76,7 @@ fun TelaJogo(
                 // --- ÍCONES DA BOTTOM BAR CORRIGIDOS ---
                 TextButton(onClick = onNavigateToRanking) {
                     Icon(
-                        Icons.Default.Settings, // Ícone correto
+                        Icons.Default.Star, // Ícone correto (Padrão)
                         contentDescription = null,
                         modifier = Modifier.size(18.dp)
                     )
@@ -111,6 +110,7 @@ fun TelaJogo(
                 .padding(scaffoldPadding)
                 .padding(16.dp)
         ) {
+            // --- BOTÃO DE TEMA CORRIGIDO ---
 
 
             Column(
@@ -407,4 +407,3 @@ fun TelaJogoPreview() {
         }
     }
 }
-
