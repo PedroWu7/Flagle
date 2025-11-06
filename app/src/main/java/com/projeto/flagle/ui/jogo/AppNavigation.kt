@@ -95,17 +95,14 @@ fun AppNavigation() {
                     onNavigateToPontuacao = {
                         navController.navigate("pontuacao")
                     },
-                    // --- AÇÃO RECOMENDADA ---
-                    // Adicione um botão de "Sair" na sua TelaJogo
-                    // e passe este callback para ele:
-                    /*
+                    // --- BLOCO ATIVADO ---
+                    // Agora estamos passando a lógica de logout para a TelaJogo
                     onSignOut = {
                         authViewModel.signOut()
                         navController.navigate("login") {
                             popUpTo("jogo") { inclusive = true }
                         }
                     }
-                    */
                 )
             }
 

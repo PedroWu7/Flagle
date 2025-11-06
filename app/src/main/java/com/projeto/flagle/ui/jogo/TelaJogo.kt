@@ -20,8 +20,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Star // <-- 1. IMPORT ADICIONADO
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Star // Adicionado (Padrão)
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -38,6 +39,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar // <-- 2. IMPORT ADICIONADO
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,11 +61,28 @@ fun TelaJogo(
     onNavigateToCadastro: () -> Unit,
     onNavigateToRanking: () -> Unit,
     onNavigateToPontuacao: () -> Unit,
+    onSignOut: () -> Unit // <-- 3. PARÂMETRO ADICIONADO
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
 
     Scaffold(
+        // --- 4. TOP BAR ADICIONADA ---
+        topBar = {
+            TopAppBar(
+                title = { Text("Flagle") },
+                actions = {
+                    // Botão de Sair
+                    IconButton(onClick = onSignOut) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = "Sair da conta"
+                        )
+                    }
+                }
+            )
+        },
+        // --- FIM DA TOP BAR ---
         bottomBar = {
             Row(
                 modifier = Modifier
@@ -120,11 +139,12 @@ fun TelaJogo(
                     .verticalScroll(scrollState),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // O padding vertical foi removido daqui para não criar espaço duplo
                 Text(
                     "FLAGLE",
                     style = MaterialTheme.typography.displayMedium,
                     color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(vertical = 32.dp)
+                    modifier = Modifier.padding(top = 16.dp, bottom = 32.dp) // Ajustado
                 )
 
                 // Botões de Dificuldade

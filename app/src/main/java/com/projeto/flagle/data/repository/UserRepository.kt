@@ -5,7 +5,6 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
-import com.projeto.flagle.data.local.Bandeiras
 
 // Esta classe vai centralizar toda a lógica do Firestore (Etapas 5, 6, 7)
 class UserRepository {
@@ -17,7 +16,7 @@ class UserRepository {
      * ETAPA 5: Salvar dados do usuário no Firestore após o login
      * Isso é chamado logo após o usuário fazer o login com o Google pela primeira vez.
      */
-    fun criarPerfilDeUsuario(user: FirebaseUser) {
+    fun criarPerfilDeUsuario(user: FirebaseUser, nome: String) {
         val userData = hashMapOf(
             "nome" to user.displayName,
             "email" to user.email,
