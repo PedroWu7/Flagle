@@ -17,7 +17,13 @@ import kotlinx.coroutines.launch
 data class AuthUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
-    val loggedInUser: FirebaseUser? = null
+    val loggedInUser: FirebaseUser? = null,
+    // --- NOVOS CAMPOS DE ESTADO ---
+    val email: String = "",
+    val password: String = "",
+    val nome: String = "", // Usado apenas no registro
+    val isRegisterMode: Boolean = false // Alterna entre Login e Registro
+    // --- FIM DOS NOVOS CAMPOS ---
 )
 
 /**
@@ -42,6 +48,7 @@ class AuthViewModel(
     /**
      * Chamado pela UI (LoginScreen) após o GoogleSignInClient retornar o idToken.
      */
+    /* // <-- LÓGICA DO GOOGLE REMOVIDA
     fun signInWithGoogleToken(idToken: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
@@ -50,7 +57,7 @@ class AuthViewModel(
                 val user = authRepository.firebaseSignInWithGoogle(idToken)
 
                 // 2. (ETAPA 5) Se for bem-sucedido, cria/atualiza o perfil no Firestore
-                userRepository.criarPerfilDeUsuario(user)
+                userRepository.criarPerfilDeUsuario(user) // <-- Esta função também mudou
 
                 // 3. Atualiza o estado da UI com o usuário logado
                 _uiState.update { it.copy(isLoading = false, loggedInUser = user) }
@@ -61,6 +68,63 @@ class AuthViewModel(
             }
         }
     }
+    */ // <-- FIM DA REMOÇÃO
+
+    // --- NOVAS FUNÇÕES ---
+    fun onEmailChange(email: String) {
+        _uiState.update { it.copy(email = email) }
+    }
+
+    fun onPasswordChange(password: String) {
+        _uiState.update { it.copy(password = password) }
+    }
+
+    fun onNameChange(nome: String) {
+        _uiState.update { it.copy(nome = nome) }
+    }
+
+    fun toggleRegisterMode() {
+        _uiState.update { it.copy(isRegisterMode = !it.isRegisterMode, error = null) }
+    }
+
+    /**
+     * Chamado pelo botão principal (Entrar/Registrar) na UI.
+     */
+    fun performAuthentication() {
+        val state = _uiState.value
+        if (state.email.isBlank() || state.password.isBlank()) {
+            _uiState.update { it.copy(error = "Email e senha não podem estar em branco.") }
+            return
+        }
+
+        if (state.isRegisterMode && state.nome.isBlank()) {
+            _uiState.update { it.copy(error = "O nome é obrigatório para o registro.") }
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                val user = if (state.isRegisterMode) {
+                    // --- FLUXO DE REGISTRO ---
+                    // 1. Cria o usuário no Auth
+                    val newUser = authRepository.registerWithEmail(state.email, state.password)
+                    // 2. Cria o perfil no Firestore
+                    userRepository.criarPerfilDeUsuario(newUser, state.nome)
+                    newUser
+                } else {
+                    // --- FLUXO DE LOGIN ---
+                    authRepository.signInWithEmail(state.email, state.password)
+                }
+                // 3. Atualiza a UI
+                _uiState.update { it.copy(isLoading = false, loggedInUser = user) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message ?: "Erro desconhecido") }
+            }
+        }
+    }
+    // --- FIM DAS NOVAS FUNÇÕES ---
+
 
     /**
      * Limpa a mensagem de erro da UI.
