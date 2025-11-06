@@ -3,8 +3,12 @@ package com.projeto.flagle.ui.jogo
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+// Importe o FirebaseAuth para pegar o usuário logado
+import com.google.firebase.auth.FirebaseAuth
 import com.projeto.flagle.data.local.Bandeiras
 import com.projeto.flagle.data.repository.BandeirasRepository
+// Importe o novo UserRepository
+import com.projeto.flagle.data.repository.UserRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,19 +31,26 @@ data class BandeirasUiState(
     val listaContinentes: List<String> = listOf("TODOS"),
 
     val quadradosRevelados: Int = 0,
-
-    // --- NOVO ESTADO ADICIONADO ---
     val modoDificil: Boolean = true
-    // --- FIM DO NOVO ESTADO ---
-
 ) {
     val textoBotao: String
         get() = if (bandeirasEmEdicao == null) "Adicionar Bandeira" else "Atualizar Bandeira"
 }
 
-class BandeirasViewModel(private val repository: BandeirasRepository) : ViewModel() {
+// --- MODIFICADO AQUI ---
+// Adicione o UserRepository no construtor
+class BandeirasViewModel(
+    private val repository: BandeirasRepository,
+    private val userRepository: UserRepository // Nova dependência
+) : ViewModel() {
+
     private val _uiState = MutableStateFlow(BandeirasUiState())
     val uiState: StateFlow<BandeirasUiState> = _uiState.asStateFlow()
+
+    // --- NOVO AQUI ---
+    // Maneira fácil de pegar o ID do usuário logado
+    private val currentUserId: String?
+        get() = FirebaseAuth.getInstance().currentUser?.uid
 
     init {
         viewModelScope.launch {
@@ -53,9 +64,6 @@ class BandeirasViewModel(private val repository: BandeirasRepository) : ViewMode
                     if (!currentState.carregamentoInicialCompleto) {
                         val bandeiraInicial = if (bandeiras.isNotEmpty()) bandeiras.random() else null
                         val mensagem = if (bandeiras.isEmpty()) "Nenhuma bandeira cadastrada!" else ""
-
-                        // --- MODIFICADO AQUI ---
-                        // Define os quadrados iniciais com base no modo
                         val quadradosIniciais = if (currentState.modoDificil) 0 else 6
 
                         currentState.copy(
@@ -64,10 +72,9 @@ class BandeirasViewModel(private val repository: BandeirasRepository) : ViewMode
                             carregamentoInicialCompleto = true,
                             mensagemResultado = mensagem,
                             listaContinentes = continentes,
-                            quadradosRevelados = quadradosIniciais // Reseta com base no modo
+                            quadradosRevelados = quadradosIniciais
                         )
-                    }
-                    else {
+                    } else {
                         currentState.copy(
                             listaDeBandeiras = bandeiras,
                             listaContinentes = continentes
@@ -78,6 +85,9 @@ class BandeirasViewModel(private val repository: BandeirasRepository) : ViewMode
         }
     }
 
+    // [Funções onNameChange, onUrlImagemChange, onContinenteChange, onEditar, onDeletar, onSalvar, LimparCampos, onModoDificuldadeChange, onPalpiteChange, onContinenteSelecionadoChange, sortearNovaBandeira]
+    // ... (Todo o seu código existente vai aqui, sem alteração) ...
+    // ...
     fun onNameChange(novoNome: String) {
         _uiState.update { it.copy(nome = novoNome.uppercase()) }
     }
@@ -145,26 +155,19 @@ class BandeirasViewModel(private val repository: BandeirasRepository) : ViewMode
         }
     }
 
-    // --- NOVA FUNÇÃO ADICIONADA ---
     fun onModoDificuldadeChange(isDificil: Boolean) {
-        // Atualiza o estado
         _uiState.update { it.copy(modoDificil = isDificil) }
-        // Sorteia uma nova bandeira para aplicar o modo
         sortearNovaBandeira()
     }
-    // --- FIM DA NOVA FUNÇÃO ---
-
 
     fun onPalpiteChange(palpite: String) {
         _uiState.update { it.copy(palpiteUsuario = palpite) }
     }
 
-
     fun onContinenteSelecionadoChange(continente: String) {
         _uiState.update { it.copy(continenteSelecionado = continente) }
         sortearNovaBandeira()
     }
-
 
     fun sortearNovaBandeira() {
         val state = _uiState.value
@@ -178,8 +181,6 @@ class BandeirasViewModel(private val repository: BandeirasRepository) : ViewMode
             listaCompleta.filter { it.continente.equals(filtro, ignoreCase = true) }
         }
 
-        // --- MODIFICADO AQUI ---
-        // Define os quadrados com base no modo de dificuldade atual
         val quadradosIniciais = if (state.modoDificil) 0 else 6
 
         if (listaFiltrada.isEmpty()) {
@@ -188,7 +189,7 @@ class BandeirasViewModel(private val repository: BandeirasRepository) : ViewMode
                     bandeiraSorteada = null,
                     mensagemResultado = if (filtro == "TODOS") "Nenhuma bandeira cadastrada!" else "Nenhuma bandeira para o continente '$filtro'.",
                     palpiteUsuario = "",
-                    quadradosRevelados = quadradosIniciais // Reseta com base no modo
+                    quadradosRevelados = quadradosIniciais
                 )
             }
             return
@@ -199,7 +200,7 @@ class BandeirasViewModel(private val repository: BandeirasRepository) : ViewMode
                 it.copy(
                     mensagemResultado = "Apenas uma bandeira para este continente.",
                     palpiteUsuario = "",
-                    quadradosRevelados = quadradosIniciais // Reseta com base no modo
+                    quadradosRevelados = quadradosIniciais
                 )
             }
             return
@@ -215,11 +216,31 @@ class BandeirasViewModel(private val repository: BandeirasRepository) : ViewMode
                 bandeiraSorteada = novaBandeira,
                 palpiteUsuario = "",
                 mensagemResultado = "",
-                quadradosRevelados = quadradosIniciais // --- ATUALIZADO AQUI ---
+                quadradosRevelados = quadradosIniciais
             )
         }
     }
 
+    // --- NOVO AQUI ---
+    /**
+     * Calcula quantos pontos o usuário ganha com base nos quadrados revelados.
+     */
+    private fun calcularPontosGanhos(state: BandeirasUiState): Int {
+        if (!state.modoDificil) {
+            return 10 // Pontuação fixa no modo fácil
+        }
+
+        // Pontuação dinâmica no modo difícil
+        return when (state.quadradosRevelados) {
+            0 -> 100 // Acertou de primeira
+            1 -> 80
+            2 -> 60
+            3 -> 40
+            4 -> 20
+            5 -> 10
+            else -> 5 // Acertou com tudo revelado
+        }
+    }
 
     fun verificarPalpite() {
         val state = _uiState.value
@@ -234,11 +255,26 @@ class BandeirasViewModel(private val repository: BandeirasRepository) : ViewMode
         }
 
         if (palpite.equals(nomeCorreto, ignoreCase = true)) {
+            // --- MODIFICADO AQUI (ETAPA 7) ---
+            // Pegar o ID do usuário e o continente da bandeira
+            val userId = currentUserId
+            val continente = state.bandeiraSorteada?.continente ?: "DESCONHECIDO"
+            val pontosGanhos = calcularPontosGanhos(state)
+
+            // Salvar no Firestore SE o usuário estiver logado
+            if (userId != null) {
+                // Usamos o viewModelScope para chamar a função do repositório
+                viewModelScope.launch {
+                    userRepository.atualizarPontos(userId, continente, pontosGanhos)
+                }
+            }
+            // --- FIM DA MODIFICAÇÃO ---
+
             // Inicia a coroutine para acertar e pular
             viewModelScope.launch {
                 _uiState.update {
                     it.copy(
-                        mensagemResultado = "Correto! Parabéns!",
+                        mensagemResultado = "Correto! +$pontosGanhos pontos!", // Mostra os pontos ganhos
                         quadradosRevelados = 6 // Revela a imagem inteira
                     )
                 }
@@ -246,8 +282,6 @@ class BandeirasViewModel(private val repository: BandeirasRepository) : ViewMode
                 sortearNovaBandeira() // Sorteia a próxima
             }
         } else {
-            // --- MODIFICADO AQUI ---
-            // Só revela mais quadrados se estiver no modo difícil
             if (state.modoDificil) {
                 val novosQuadrados = (state.quadradosRevelados + 1).coerceAtMost(6)
                 _uiState.update {
@@ -257,11 +291,9 @@ class BandeirasViewModel(private val repository: BandeirasRepository) : ViewMode
                     )
                 }
             } else {
-                // No modo fácil, não revela mais, só mostra a msg de erro
                 _uiState.update {
                     it.copy(
                         mensagemResultado = "Errado! Tente novamente."
-                        // quadradosRevelados já é 6, então não muda
                     )
                 }
             }
@@ -269,14 +301,19 @@ class BandeirasViewModel(private val repository: BandeirasRepository) : ViewMode
     }
 }
 
-class BandeirasViewModelFactory(private val repository: BandeirasRepository) :
+// --- MODIFICADO AQUI ---
+// Adicione o UserRepository na Factory
+class BandeirasViewModelFactory(
+    private val repository: BandeirasRepository,
+    private val userRepository: UserRepository // Nova dependência
+) :
     ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(BandeirasViewModel::class.java)) {
-                @Suppress("UNCHECKED_CAST")
-                return BandeirasViewModel(repository) as T
-            }
-            throw IllegalArgumentException("Unknown ViewModel class")
+            @Suppress("UNCHECKED_CAST")
+            // Passe o novo repositório para o ViewModel
+            return BandeirasViewModel(repository, userRepository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
-

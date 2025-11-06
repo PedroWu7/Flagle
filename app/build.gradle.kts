@@ -3,6 +3,9 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.devtools.ksp")
+    // Add the Google services Gradle plugin
+    id("com.google.gms.google-services")
+
 }
 
 android {
@@ -51,6 +54,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.play.services.games)
+    implementation(libs.firebase.auth.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -77,4 +81,21 @@ dependencies {
 
     implementation(libs.androidx.navigation.compose)
 
+    // Import the Firebase BoM
+    implementation(platform("com.google.firebase:firebase-bom:34.5.0"))
+
+
+    // TODO: Add the dependencies for Firebase products you want to use
+    // When using the BoM, don't specify versions in Firebase dependencies
+    // https://firebase.google.com/docs/android/setup#available-libraries
+
+    // 1. Para Autenticação (Corrige o erro "Unresolved reference: auth")
+    implementation("com.google.firebase:firebase-auth")
+
+    // 2. Para o Banco de Dados (Necessário para o UserRepository.kt)
+    implementation("com.google.firebase:firebase-firestore")
+
+    // 3. Para o Login com Google (Necessário para a ETAPA 4)
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
+    // (Note que esta não faz parte do BoM, por isso especificamos a versão)
 }
