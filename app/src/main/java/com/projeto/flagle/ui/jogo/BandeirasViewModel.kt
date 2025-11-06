@@ -5,12 +5,12 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.projeto.flagle.data.local.Bandeiras
 import com.projeto.flagle.data.repository.BandeirasRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.delay // <-- IMPORT ADICIONADO
 
 data class BandeirasUiState(
     val listaDeBandeiras: List<Bandeiras> = emptyList(),
@@ -26,12 +26,10 @@ data class BandeirasUiState(
     val continenteSelecionado: String = "TODOS",
     val listaContinentes: List<String> = listOf("TODOS"),
 
-    /** Quantidade de quadrados revelados (0 a 6) */
     val quadradosRevelados: Int = 0,
 
-    // --- NOVO ESTADO ---
-    /** Modo de dificuldade: "FACIL" ou "DIFICIL" */
-    val modoDificuldade: String = "DIFICIL"
+    // --- NOVO ESTADO ADICIONADO ---
+    val modoDificil: Boolean = true
     // --- FIM DO NOVO ESTADO ---
 
 ) {
@@ -56,10 +54,9 @@ class BandeirasViewModel(private val repository: BandeirasRepository) : ViewMode
                         val bandeiraInicial = if (bandeiras.isNotEmpty()) bandeiras.random() else null
                         val mensagem = if (bandeiras.isEmpty()) "Nenhuma bandeira cadastrada!" else ""
 
-                        // --- MODIFICADO ---
-                        // Define quadrados iniciais baseado no modo default
-                        val quadradosIniciais = if (currentState.modoDificuldade == "FACIL") 6 else 0
-                        // --- FIM DA MODIFICAÇÃO ---
+                        // --- MODIFICADO AQUI ---
+                        // Define os quadrados iniciais com base no modo
+                        val quadradosIniciais = if (currentState.modoDificil) 0 else 6
 
                         currentState.copy(
                             listaDeBandeiras = bandeiras,
@@ -67,9 +64,7 @@ class BandeirasViewModel(private val repository: BandeirasRepository) : ViewMode
                             carregamentoInicialCompleto = true,
                             mensagemResultado = mensagem,
                             listaContinentes = continentes,
-                            // --- MODIFICADO ---
-                            quadradosRevelados = quadradosIniciais // Reseta na carga inicial
-                            // --- FIM DA MODIFICAÇÃO ---
+                            quadradosRevelados = quadradosIniciais // Reseta com base no modo
                         )
                     }
                     else {
@@ -150,11 +145,11 @@ class BandeirasViewModel(private val repository: BandeirasRepository) : ViewMode
         }
     }
 
-    // --- NOVA FUNÇÃO ---
-    fun onModoDificuldadeChange(novoModo: String) {
-        if (novoModo == _uiState.value.modoDificuldade) return
-        _uiState.update { it.copy(modoDificuldade = novoModo) }
-        // Sorteia uma nova bandeira para aplicar o modo imediatamente
+    // --- NOVA FUNÇÃO ADICIONADA ---
+    fun onModoDificuldadeChange(isDificil: Boolean) {
+        // Atualiza o estado
+        _uiState.update { it.copy(modoDificil = isDificil) }
+        // Sorteia uma nova bandeira para aplicar o modo
         sortearNovaBandeira()
     }
     // --- FIM DA NOVA FUNÇÃO ---
@@ -173,12 +168,6 @@ class BandeirasViewModel(private val repository: BandeirasRepository) : ViewMode
 
     fun sortearNovaBandeira() {
         val state = _uiState.value
-
-        // --- MODIFICADO ---
-        // Define quadrados iniciais baseado no modo atual
-        val quadradosIniciais = if (state.modoDificuldade == "FACIL") 6 else 0
-        // --- FIM DA MODIFICAÇÃO ---
-
         val listaCompleta = state.listaDeBandeiras
         val filtro = state.continenteSelecionado
         val bandeiraAtual = state.bandeiraSorteada
@@ -189,15 +178,17 @@ class BandeirasViewModel(private val repository: BandeirasRepository) : ViewMode
             listaCompleta.filter { it.continente.equals(filtro, ignoreCase = true) }
         }
 
+        // --- MODIFICADO AQUI ---
+        // Define os quadrados com base no modo de dificuldade atual
+        val quadradosIniciais = if (state.modoDificil) 0 else 6
+
         if (listaFiltrada.isEmpty()) {
             _uiState.update {
                 it.copy(
                     bandeiraSorteada = null,
                     mensagemResultado = if (filtro == "TODOS") "Nenhuma bandeira cadastrada!" else "Nenhuma bandeira para o continente '$filtro'.",
                     palpiteUsuario = "",
-                    // --- MODIFICADO ---
-                    quadradosRevelados = quadradosIniciais // Reseta
-                    // --- FIM DA MODIFICAÇÃO ---
+                    quadradosRevelados = quadradosIniciais // Reseta com base no modo
                 )
             }
             return
@@ -208,20 +199,7 @@ class BandeirasViewModel(private val repository: BandeirasRepository) : ViewMode
                 it.copy(
                     mensagemResultado = "Apenas uma bandeira para este continente.",
                     palpiteUsuario = "",
-                    // --- MODIFICADO ---
-                    quadradosRevelados = quadradosIniciais // Reseta
-                    // --- FIM DA MODIFICAÇÃO ---
-                )
-            }
-            return
-        }
-
-        if (listaFiltrada.size == 1 && listaFiltrada.first().nome == bandeiraAtual?.nome) {
-            _uiState.update {
-                it.copy(
-                    mensagemResultado = "Apenas uma bandeira para este continente.",
-                    palpiteUsuario = "",
-                    quadradosRevelados = 0 // Reseta
+                    quadradosRevelados = quadradosIniciais // Reseta com base no modo
                 )
             }
             return
@@ -237,9 +215,7 @@ class BandeirasViewModel(private val repository: BandeirasRepository) : ViewMode
                 bandeiraSorteada = novaBandeira,
                 palpiteUsuario = "",
                 mensagemResultado = "",
-                // --- MODIFICADO ---
-                quadradosRevelados = quadradosIniciais // --- RESETADO AQUI ---
-                // --- FIM DA MODIFICAÇÃO ---
+                quadradosRevelados = quadradosIniciais // --- ATUALIZADO AQUI ---
             )
         }
     }
@@ -258,38 +234,36 @@ class BandeirasViewModel(private val repository: BandeirasRepository) : ViewMode
         }
 
         if (palpite.equals(nomeCorreto, ignoreCase = true)) {
-
-            // --- INÍCIO DA ALTERAÇÃO ---
-            // Lança uma coroutine no escopo do ViewModel
+            // Inicia a coroutine para acertar e pular
             viewModelScope.launch {
-                // 1. Mostra a mensagem de acerto e revela a bandeira
                 _uiState.update {
                     it.copy(
                         mensagemResultado = "Correto! Parabéns!",
                         quadradosRevelados = 6 // Revela a imagem inteira
                     )
                 }
-
-                // 2. Espera 1.5 segundos (1500 milissegundos)
-                delay(1500L)
-
-                // 3. Sorteia a próxima bandeira (que vai limpar a mensagem e os quadrados
-                //    de acordo com o modo de dificuldade selecionado)
-                sortearNovaBandeira()
+                delay(1500L) // Espera 1.5s
+                sortearNovaBandeira() // Sorteia a próxima
             }
-            // --- FIM DA ALTERAÇÃO ---
-
         } else {
-            // --- REVELA UM QUADRADO (MÁXIMO 6) AO ERRAR ---
-            // Esta lógica funciona para ambos os modos:
-            // - Fácil: 6 + 1 = 7, coerceAtMost(6) = 6 (continua 6)
-            // - Difícil: 0 + 1 = 1, 1 + 1 = 2, etc.
-            val novosQuadrados = (state.quadradosRevelados + 1).coerceAtMost(6)
-            _uiState.update {
-                it.copy(
-                    mensagemResultado = "Errado! Tente novamente.",
-                    quadradosRevelados = novosQuadrados
-                )
+            // --- MODIFICADO AQUI ---
+            // Só revela mais quadrados se estiver no modo difícil
+            if (state.modoDificil) {
+                val novosQuadrados = (state.quadradosRevelados + 1).coerceAtMost(6)
+                _uiState.update {
+                    it.copy(
+                        mensagemResultado = "Errado! Tente novamente.",
+                        quadradosRevelados = novosQuadrados
+                    )
+                }
+            } else {
+                // No modo fácil, não revela mais, só mostra a msg de erro
+                _uiState.update {
+                    it.copy(
+                        mensagemResultado = "Errado! Tente novamente."
+                        // quadradosRevelados já é 6, então não muda
+                    )
+                }
             }
         }
     }
@@ -299,10 +273,10 @@ class BandeirasViewModelFactory(private val repository: BandeirasRepository) :
     ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(BandeirasViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return BandeirasViewModel(repository) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
+                @Suppress("UNCHECKED_CAST")
+                return BandeirasViewModel(repository) as T
+            }
+            throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
 

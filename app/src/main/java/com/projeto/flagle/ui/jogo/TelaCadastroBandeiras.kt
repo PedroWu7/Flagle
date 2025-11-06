@@ -49,7 +49,10 @@ fun TelaCadastroBandeiras(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
-        modifier = Modifier.padding(10.dp),
+        // --- CORREÇÃO AQUI ---
+        // O Scaffold agora preenche a tela inteira
+        modifier = Modifier.fillMaxSize(),
+        // --- FIM DA CORREÇÃO ---
         topBar = {
             TopAppBar(
                 title = { Text("Cadastrar Bandeiras") },
@@ -67,7 +70,12 @@ fun TelaCadastroBandeiras(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(it),
+                // O padding do Scaffold (it) é aplicado
+                .padding(it)
+                // --- CORREÇÃO AQUI ---
+                // O padding de 10.dp foi movido para cá
+                .padding(10.dp),
+            // --- FIM DA CORREÇÃO ---
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
@@ -75,8 +83,14 @@ fun TelaCadastroBandeiras(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp),
-                border = BorderStroke(1.dp, Color.Gray),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F0F0))
+                // --- CORREÇÃO AQUI ---
+                // Substituído Color.Gray por uma cor do tema
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                // Substituído Color(0xFFF0F0F0) por uma cor do tema
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+                // --- FIM DA CORREÇÃO ---
             ) {
 
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -134,7 +148,10 @@ fun UmaBandeira(bandeira: Bandeiras, onEdit: (Bandeiras) -> Unit, onDelete: (Ban
             .fillMaxWidth()
             .padding(vertical = 4.dp),
         elevation = CardDefaults.cardElevation(4.dp),
-        border = BorderStroke(1.dp, Color.LightGray)
+        // --- CORREÇÃO AQUI ---
+        // Substituído Color.LightGray por uma cor do tema
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        // --- FIM DA CORREÇÃO ---
     ) {
         Row(
             modifier = Modifier
@@ -185,6 +202,7 @@ fun UmaBandeira(bandeira: Bandeiras, onEdit: (Bandeiras) -> Unit, onDelete: (Ban
 @Preview
 @Composable
 fun TelaCadastroBandeirasPreview() {
-
+    // Você pode criar um ViewModel "fake" aqui para o preview se desejar,
+    // mas por enquanto, deixaremos em branco para evitar erros.
 }
 
