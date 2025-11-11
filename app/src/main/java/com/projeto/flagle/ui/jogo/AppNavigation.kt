@@ -30,7 +30,7 @@ import com.projeto.flagle.ui.theme.FlagleTheme
 fun AppNavigation() {
     val navController = rememberNavController()
 
-    // --- Configuração dos Repositórios e Factories ---
+    // Configuração dos Repositórios e Factories
     val context = LocalContext.current
 
     // Repositório de Bandeiras (Room)
@@ -45,22 +45,21 @@ fun AppNavigation() {
     val authViewModelFactory = remember {
         AuthViewModelFactory(authRepository, userRepository)
     }
-    // Factory do BandeirasViewModel (agora precisa do UserRepository)
+    // Factory do BandeirasViewModel
     val bandeirasViewModelFactory = remember {
         BandeirasViewModelFactory(bandeirasRepository, userRepository)
     }
-    // --- NOVO: Factory do RankingViewModel ---
+    // Factory do RankingViewModel
     val rankingViewModelFactory = remember {
         RankingViewModelFactory(userRepository, bandeirasRepository)
     }
 
-    // Pega o AuthViewModel no nível mais alto da navegação
+    // Pega o AuthViewModel no nivel mais alto da navegacao
     val authViewModel: AuthViewModel = viewModel(factory = authViewModelFactory)
     val authState by authViewModel.uiState.collectAsState()
 
-    // --- Fim da Configuração ---
 
-    // Define a tela inicial com base no estado de login
+    // muda a tela inicial com base no estado de login
     val startDestination = if (authState.loggedInUser != null) "jogo" else "login"
 
     FlagleTheme(
@@ -68,7 +67,7 @@ fun AppNavigation() {
     ) {
         NavHost(navController = navController, startDestination = startDestination) {
 
-            // --- Rota de Login ---
+            // Rota de login
             composable("login") {
                 LoginScreen(
                     authViewModel = authViewModel,
@@ -81,7 +80,7 @@ fun AppNavigation() {
                 )
             }
 
-            // --- Rota do Jogo ---
+            // Rota do Jogo
             composable("jogo") {
                 // Pega o BandeirasViewModel aqui
                 val bandeirasViewModel: BandeirasViewModel = viewModel(factory = bandeirasViewModelFactory)
@@ -97,10 +96,9 @@ fun AppNavigation() {
                     onNavigateToPontuacao = {
                         navController.navigate("pontuacao")
                     },
-                    // --- ATUALIZADO: Passa a função de logout ---
+
                     onSignOut = {
                         authViewModel.signOut()
-                        // Navega de volta ao login e limpa a pilha
                         navController.navigate("login") {
                             popUpTo("jogo") { inclusive = true }
                         }
@@ -108,9 +106,7 @@ fun AppNavigation() {
                 )
             }
 
-            // --- Rota de Cadastro de Bandeiras ---
             composable("cadastro") {
-                // Pega o mesmo BandeirasViewModel para compartilhar o estado
                 val bandeirasViewModel: BandeirasViewModel = viewModel(factory = bandeirasViewModelFactory)
 
                 TelaCadastroBandeiras(
@@ -121,20 +117,18 @@ fun AppNavigation() {
                 )
             }
 
-            // --- Rota do Ranking ---
+
             composable("ranking") {
-                // --- NOVO: Pega o RankingViewModel aqui ---
                 val rankingViewModel: RankingViewModel = viewModel(factory = rankingViewModelFactory)
 
                 TelaRanking(
-                    viewModel = rankingViewModel, // Passa o ViewModel
+                    viewModel = rankingViewModel,
                     onNavigateBack = {
                         navController.popBackStack()
                     }
                 )
             }
 
-            // --- Rota de Pontuação ---
             composable("pontuacao") {
                 TelaPontuacao(
                     onNavigateBack = {

@@ -3,11 +3,9 @@ package com.projeto.flagle.ui.jogo
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-// Importe o FirebaseAuth para pegar o usuário logado
 import com.google.firebase.auth.FirebaseAuth
 import com.projeto.flagle.data.local.Bandeiras
 import com.projeto.flagle.data.repository.BandeirasRepository
-// Importe o novo UserRepository
 import com.projeto.flagle.data.repository.UserRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,8 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-// --- CORRIGIDO AQUI ---
-// A data class agora tem todos os seus parâmetros
+
 data class BandeirasUiState(
     val listaDeBandeiras: List<Bandeiras> = emptyList(),
     val nome: String = "",
@@ -38,11 +35,11 @@ data class BandeirasUiState(
     val textoBotao: String
         get() = if (bandeirasEmEdicao == null) "Adicionar Bandeira" else "Atualizar Bandeira"
 }
-// --- FIM DA CORREÇÃO ---
+
 
 class BandeirasViewModel(
     private val repository: BandeirasRepository,
-    private val userRepository: UserRepository // Nova dependência
+    private val userRepository: UserRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(BandeirasUiState())
@@ -211,50 +208,44 @@ class BandeirasViewModel(
             it.copy(
                 bandeiraSorteada = novaBandeira,
                 palpiteUsuario = "",
-                mensagemResultado = "", // Limpa a mensagem ao pular/sortear
+                mensagemResultado = "", // limpa a mensagem ao pular/sortear
                 quadradosRevelados = quadradosIniciais
             )
         }
     }
 
-    /**
-     * Chamado quando o usuário clica em "Pular".
-     * Aplica a penalidade de -2 pontos e sorteia uma nova bandeira.
-     */
+
     fun onPularClick() {
         val state = _uiState.value
         val userId = currentUserId
         val continente = state.bandeiraSorteada?.continente ?: "DESCONHECIDO"
-        val pontosPerdidos = -2 // Penalidade de pular
+        val pontosPerdidos = -2
 
-        // Só aplica a penalidade se o usuário estiver logado
         if (userId != null) {
             viewModelScope.launch {
                 userRepository.atualizarPontos(continente, pontosPerdidos)
             }
         }
 
-        // Sorteia a próxima bandeira
+
         sortearNovaBandeira()
     }
 
-    /**
-     * Calcula quantos pontos o usuário ganha com base nas regras da TelaPontuacao.
-     */
+
     private fun calcularPontosGanhos(state: BandeirasUiState): Int {
         if (!state.modoDificil) {
-            return 2 // Modo Fácil (como na TelaPontuacao)
+            return 2 // Modo facil
         }
 
-        // Modo Difícil (como na TelaPontuacao)
+        // Modo Dificil
         return when (state.quadradosRevelados) {
-            0 -> 6 // Acertou de primeira
+            0 -> 6
             1 -> 5
             2 -> 4
             3 -> 3
             4 -> 2
             5 -> 1
-            else -> 1 // Acertou com tudo revelado (6 quadrados)
+            else -> 1
         }
     }
 
@@ -273,25 +264,25 @@ class BandeirasViewModel(
         if (palpite.equals(nomeCorreto, ignoreCase = true)) {
             val userId = currentUserId
             val continente = state.bandeiraSorteada?.continente ?: "DESCONHECIDO"
-            val pontosGanhos = calcularPontosGanhos(state) // <-- Agora usa a lógica correta
+            val pontosGanhos = calcularPontosGanhos(state)
 
-            // Salvar no Firestore SE o usuário estiver logado
+
             if (userId != null) {
                 viewModelScope.launch {
                     userRepository.atualizarPontos(continente, pontosGanhos)
                 }
             }
 
-            // Inicia a coroutine para acertar e pular
+
             viewModelScope.launch {
                 _uiState.update {
                     it.copy(
-                        mensagemResultado = "Correto! +$pontosGanhos pontos!", // Mostra os pontos corrigidos
-                        quadradosRevelados = 6 // Revela a imagem inteira
+                        mensagemResultado = "Correto! +$pontosGanhos pontos!",
+                        quadradosRevelados = 6
                     )
                 }
-                delay(1500L) // Espera 1.5s
-                sortearNovaBandeira() // Sorteia a próxima
+                delay(1500L)
+                sortearNovaBandeira()
             }
         } else {
             if (state.modoDificil) {
@@ -315,7 +306,7 @@ class BandeirasViewModel(
 
 class BandeirasViewModelFactory(
     private val repository: BandeirasRepository,
-    private val userRepository: UserRepository // Nova dependência
+    private val userRepository: UserRepository
 ) :
     ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
