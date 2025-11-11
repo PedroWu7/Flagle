@@ -19,6 +19,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Star // <-- 1. IMPORT ADICIONADO
 import androidx.compose.material.icons.filled.Settings
@@ -75,7 +76,7 @@ fun TelaJogo(
                     // Botão de Sair
                     IconButton(onClick = onSignOut) {
                         Icon(
-                            imageVector = Icons.Default.Star,
+                            imageVector = Icons.Filled.ExitToApp,
                             contentDescription = "Sair da conta"
                         )
                     }
