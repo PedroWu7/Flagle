@@ -25,9 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-/**
- * Nova tela que exibe o sistema de pontuação.
- */
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TelaPontuacao(
@@ -73,9 +71,7 @@ fun TelaPontuacao(
     }
 }
 
-/**
- * Um Card para exibir uma regra de pontuação.
- */
+
 @Composable
 private fun RuleCard(title: String, description: String, points: String, isPenalty: Boolean = false) {
     Card(

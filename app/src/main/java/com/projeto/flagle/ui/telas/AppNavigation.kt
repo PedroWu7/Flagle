@@ -13,16 +13,16 @@ import com.projeto.flagle.data.local.AppDatabase
 import com.projeto.flagle.data.repository.AuthRepository
 import com.projeto.flagle.data.repository.BandeirasRepository
 import com.projeto.flagle.data.repository.UserRepository
-import com.projeto.flagle.ui.auth.AuthViewModel
-import com.projeto.flagle.ui.auth.AuthViewModelFactory
+import com.projeto.flagle.ui.viewmodel.AuthViewModel
+import com.projeto.flagle.ui.viewmodel.AuthViewModelFactory
 import com.projeto.flagle.ui.auth.LoginScreen
-import com.projeto.flagle.ui.jogo.BandeirasViewModel
-import com.projeto.flagle.ui.jogo.BandeirasViewModelFactory
-import com.projeto.flagle.ui.jogo.TelaCadastroBandeiras
-import com.projeto.flagle.ui.jogo.TelaJogo
+import com.projeto.flagle.ui.viewmodel.BandeirasViewModel
+import com.projeto.flagle.ui.viewmodel.BandeirasViewModelFactory
+import com.projeto.flagle.ui.telas.TelaCadastroBandeiras
+import com.projeto.flagle.ui.telas.TelaJogo
 import com.projeto.flagle.ui.pontuacao.TelaPontuacao
-import com.projeto.flagle.ui.ranking.RankingViewModel
-import com.projeto.flagle.ui.ranking.RankingViewModelFactory
+import com.projeto.flagle.ui.viewmodel.RankingViewModel
+import com.projeto.flagle.ui.viewmodel.RankingViewModelFactory
 import com.projeto.flagle.ui.ranking.TelaRanking
 import com.projeto.flagle.ui.theme.FlagleTheme
 
@@ -80,9 +80,8 @@ fun AppNavigation() {
                 )
             }
 
-            // Rota do Jogo
+
             composable("jogo") {
-                // Pega o BandeirasViewModel aqui
                 val bandeirasViewModel: BandeirasViewModel = viewModel(factory = bandeirasViewModelFactory)
 
                 TelaJogo(

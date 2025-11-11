@@ -1,4 +1,4 @@
-package com.projeto.flagle.ui.jogo
+package com.projeto.flagle.ui.telas
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -33,11 +33,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.projeto.flagle.data.local.Bandeiras
+import com.projeto.flagle.ui.viewmodel.BandeirasViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,10 +49,9 @@ fun TelaCadastroBandeiras(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
-        // --- CORREÇÃO AQUI ---
-        // O Scaffold agora preenche a tela inteira
+
         modifier = Modifier.fillMaxSize(),
-        // --- FIM DA CORREÇÃO ---
+
         topBar = {
             TopAppBar(
                 title = { Text("Cadastrar Bandeiras") },
@@ -70,12 +69,8 @@ fun TelaCadastroBandeiras(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                // O padding do Scaffold (it) é aplicado
                 .padding(it)
-                // --- CORREÇÃO AQUI ---
-                // O padding de 10.dp foi movido para cá
                 .padding(10.dp),
-            // --- FIM DA CORREÇÃO ---
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
@@ -83,14 +78,11 @@ fun TelaCadastroBandeiras(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp),
-                // --- CORREÇÃO AQUI ---
-                // Substituído Color.Gray por uma cor do tema
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                // Substituído Color(0xFFF0F0F0) por uma cor do tema
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant
                 )
-                // --- FIM DA CORREÇÃO ---
+
             ) {
 
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -148,10 +140,7 @@ fun UmaBandeira(bandeira: Bandeiras, onEdit: (Bandeiras) -> Unit, onDelete: (Ban
             .fillMaxWidth()
             .padding(vertical = 4.dp),
         elevation = CardDefaults.cardElevation(4.dp),
-        // --- CORREÇÃO AQUI ---
-        // Substituído Color.LightGray por uma cor do tema
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-        // --- FIM DA CORREÇÃO ---
     ) {
         Row(
             modifier = Modifier
@@ -202,7 +191,6 @@ fun UmaBandeira(bandeira: Bandeiras, onEdit: (Bandeiras) -> Unit, onDelete: (Ban
 @Preview
 @Composable
 fun TelaCadastroBandeirasPreview() {
-    // Você pode criar um ViewModel "fake" aqui para o preview se desejar,
-    // mas por enquanto, deixaremos em branco para evitar erros.
+
 }
 

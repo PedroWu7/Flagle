@@ -1,4 +1,4 @@
-package com.projeto.flagle.ui.jogo
+package com.projeto.flagle.ui.telas
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -21,9 +21,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Star // <-- 1. IMPORT ADICIONADO
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -40,7 +39,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar // <-- 2. IMPORT ADICIONADO
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,6 +53,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.projeto.flagle.ui.viewmodel.BandeirasViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,18 +62,17 @@ fun TelaJogo(
     onNavigateToCadastro: () -> Unit,
     onNavigateToRanking: () -> Unit,
     onNavigateToPontuacao: () -> Unit,
-    onSignOut: () -> Unit // <-- 3. PARÂMETRO ADICIONADO
+    onSignOut: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
 
     Scaffold(
-        // --- 4. TOP BAR ADICIONADA ---
+
         topBar = {
             TopAppBar(
                 title = { Text("Flagle") },
                 actions = {
-                    // Botão de Sair
                     IconButton(onClick = onSignOut) {
                         Icon(
                             imageVector = Icons.Filled.ExitToApp,
@@ -83,7 +82,7 @@ fun TelaJogo(
                 }
             )
         },
-        // --- FIM DA TOP BAR ---
+
         bottomBar = {
             Row(
                 modifier = Modifier
@@ -93,10 +92,9 @@ fun TelaJogo(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // --- ÍCONES DA BOTTOM BAR CORRIGIDOS ---
                 TextButton(onClick = onNavigateToRanking) {
                     Icon(
-                        Icons.Default.Star, // Ícone correto (Padrão)
+                        Icons.Default.Star,
                         contentDescription = null,
                         modifier = Modifier.size(18.dp)
                     )
@@ -105,7 +103,7 @@ fun TelaJogo(
                 }
                 TextButton(onClick = onNavigateToPontuacao) {
                     Icon(
-                        Icons.Default.Info, // Ícone correto
+                        Icons.Default.Info,
                         contentDescription = null,
                         modifier = Modifier.size(18.dp)
                     )
@@ -114,7 +112,7 @@ fun TelaJogo(
                 }
                 TextButton(onClick = onNavigateToCadastro) {
                     Icon(
-                        Icons.Default.Settings, // Ícone correto
+                        Icons.Default.Settings,
                         contentDescription = null,
                         modifier = Modifier.size(18.dp)
                     )
@@ -130,7 +128,6 @@ fun TelaJogo(
                 .padding(scaffoldPadding)
                 .padding(16.dp)
         ) {
-            // --- BOTÃO DE TEMA CORRIGIDO ---
 
 
             Column(
@@ -140,15 +137,13 @@ fun TelaJogo(
                     .verticalScroll(scrollState),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // O padding vertical foi removido daqui para não criar espaço duplo
                 Text(
                     "FLAGLE",
                     style = MaterialTheme.typography.displayMedium,
                     color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(top = 16.dp, bottom = 32.dp) // Ajustado
+                    modifier = Modifier.padding(top = 16.dp, bottom = 32.dp)
                 )
 
-                // Botões de Dificuldade
                 Row(
                     modifier = Modifier.fillMaxWidth(0.9f),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -178,7 +173,6 @@ fun TelaJogo(
                 Spacer(modifier = Modifier.height(16.dp))
 
 
-                // --- Dropdown para selecionar o continente ---
                 var isMenuExpanded by remember { mutableStateOf(false) }
 
                 ExposedDropdownMenuBox(
@@ -188,7 +182,7 @@ fun TelaJogo(
                 ) {
                     OutlinedTextField(
                         value = uiState.continenteSelecionado.uppercase(),
-                        onValueChange = {}, // O valor é controlado pelo ViewModel
+                        onValueChange = {},
                         readOnly = true,
                         label = { Text("Continente") },
                         trailingIcon = {
@@ -196,7 +190,7 @@ fun TelaJogo(
                         },
                         colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
                         modifier = Modifier
-                            .menuAnchor() // Necessário para o dropdown
+                            .menuAnchor()
                             .fillMaxWidth()
                     )
                     ExposedDropdownMenu(
@@ -214,7 +208,7 @@ fun TelaJogo(
                         }
                     }
                 }
-                // --- FIM do Dropdown ---
+
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -275,7 +269,7 @@ fun TelaJogo(
                         Text("Adivinhar")
                     }
                 }
-                // Adiciona espaço extra na parte inferior para garantir que o scroll funcione
+
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }
@@ -298,7 +292,7 @@ private fun Bandeira(
     val indicesEmbaralhados = remember(url_imagem) { (0..5).toList().shuffled() }
 
     val indicesVisiveis = remember(quadradosRevelados, indicesEmbaralhados) {
-        // Se for 6 (modo fácil ou acerto), mostra tudo.
+
         if (quadradosRevelados >= 6) {
             (0..5).toSet()
         } else {
@@ -320,7 +314,7 @@ private fun Bandeira(
                 modifier = Modifier.fillMaxSize()
             )
 
-            // Grade de cobertura 2x3
+
             Column(modifier = Modifier.fillMaxSize()) {
                 repeat(2) { rowIndex ->
                     Row(
@@ -367,7 +361,7 @@ private fun Bandeira(
 @Preview(showBackground = true)
 @Composable
 fun TelaJogoPreview() {
-    // Preview estático que não depende do ViewModel
+
     Column(
         modifier = Modifier
             .fillMaxSize()

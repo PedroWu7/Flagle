@@ -1,4 +1,4 @@
-package com.projeto.flagle.ui.auth
+package com.projeto.flagle.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

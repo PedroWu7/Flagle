@@ -1,9 +1,6 @@
 package com.projeto.flagle.ui.auth
 
-// import android.app.Activity // <-- REMOVIDO
 import android.util.Log
-// import androidx.activity.compose.rememberLauncherForActivityResult // <-- REMOVIDO
-// import androidx.activity.result.contract.ActivityResultContracts // <-- REMOVIDO
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,98 +14,53 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField // <-- NOVO
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton // <-- NOVO
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-// import androidx.compose.runtime.remember // <-- REMOVIDO
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-// import androidx.compose.ui.platform.LocalContext // <-- REMOVIDO
-// import androidx.compose.ui.res.stringResource // <-- REMOVIDO
-import androidx.compose.ui.text.input.KeyboardType // <-- NOVO
-import androidx.compose.ui.text.input.PasswordVisualTransformation // <-- NOVO
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-// import com.google.android.gms.auth.api.signin.GoogleSignIn // <-- REMOVIDO
-// import com.google.android.gms.auth.api.signin.GoogleSignInClient // <-- REMOVIDO
-// import com.google.android.gms.auth.api.signin.GoogleSignInOptions // <-- REMOVIDO
-// import com.google.android.gms.common.api.ApiException // <-- REMOVIDO
-// import com.projeto.flagle.R // <-- REMOVIDO (Não é mais necessário para R.string.default_web_client_id)
+import com.projeto.flagle.ui.viewmodel.AuthViewModel
 
-/**
- * Tela de Login que gerencia o fluxo de Email e Senha.
- * @param onLoginSuccess Um callback para notificar o navegador que o login foi bem-sucedido.
- */
+
 @Composable
 fun LoginScreen(
     authViewModel: AuthViewModel,
     onLoginSuccess: () -> Unit
 ) {
     val uiState by authViewModel.uiState.collectAsState()
-    // val context = LocalContext.current // <-- REMOVIDO
 
-    // 1. (ETAPA 4) Configurar o GoogleSignInClient
-    /* // <-- TODA A LÓGICA DO GOOGLE SIGN-IN FOI REMOVIDA
-    val googleSignInClient: GoogleSignInClient = remember {
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(context.getString(R.string.default_web_client_id))
-            .requestEmail()
-            .build()
-        GoogleSignIn.getClient(context, gso)
-    }
-    */
 
-    // 2. (ETAPA 4) Criar o Launcher para o resultado do login
-    /* // <-- REMOVIDO
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-            try {
-                val account = task.getResult(ApiException::class.java)!!
-                account.idToken?.let { token ->
-                    Log.d("LoginScreen", "Token do Google recebido, enviando para o ViewModel.")
-                    authViewModel.signInWithGoogleToken(token)
-                } ?: run {
-                    Log.e("LoginScreen", "Token do Google é nulo.")
-                    authViewModel.clearError() // Limpa erro antigo se houver
-                }
-            } catch (e: ApiException) {
-                Log.e("LoginScreen", "Falha no Google Sign-In: ${e.statusCode}", e)
-                authViewModel.clearError()
-            }
-        } else {
-             Log.w("LoginScreen", "Login cancelado ou falhou. Resultado: ${result.resultCode}")
-        }
-    }
-    */ // <-- FIM DA REMOÇÃO
 
-    // 3. (Navegação) Observar o estado do ViewModel
+
     LaunchedEffect(uiState.loggedInUser) {
         if (uiState.loggedInUser != null) {
-            // Se o usuário está logado, chama o callback para navegar para o jogo
+
             Log.d("LoginScreen", "Login bem-sucedido! Navegando para o jogo...")
             onLoginSuccess()
+
         }
     }
 
-    // 4. (UI) Layout da tela de login
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp), // Adiciona padding
+            .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
         if (uiState.isLoading) {
             CircularProgressIndicator(modifier = Modifier.size(64.dp))
         } else {
             Column(
-                modifier = Modifier.fillMaxWidth(), // Ocupa a largura
+                modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -119,7 +71,7 @@ fun LoginScreen(
                 )
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // --- NOVOS CAMPOS DE TEXTO ---
+
 
                 if (uiState.isRegisterMode) {
                     OutlinedTextField(
@@ -152,9 +104,7 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(24.dp))
-                // --- FIM DOS NOVOS CAMPOS ---
 
-                // Botão que inicia o fluxo de login
                 Button(
                     onClick = {
                         authViewModel.performAuthentication() // <-- CHAMA A NOVA FUNÇÃO
