@@ -69,13 +69,6 @@ fun TelaPontuacao(
                 description = "A cada erro (quadrado revelado), 1 ponto é descontado da pontuação máxima. (Ex: Acertar na 2ª tentativa = 5 pontos; na 3ª = 4 pontos, etc.)",
                 points = "+1 a +5 Pontos"
             )
-
-            RuleCard(
-                title = "Pular Bandeira",
-                description = "Pular uma bandeira (clicar em \"Pular\") resulta em perda de pontos.",
-                points = "-2 Pontos",
-                isPenalty = true
-            )
         }
     }
 }

@@ -1,81 +1,79 @@
 package com.projeto.flagle.ui
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState // --- NOVO ---
-import androidx.compose.runtime.getValue // --- NOVO ---
-import androidx.compose.runtime.remember // --- NOVO ---
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.projeto.flagle.data.local.AppDatabase
-import com.projeto.flagle.data.repository.BandeirasRepository
-// --- NOVOS IMPORTS ---
 import com.projeto.flagle.data.repository.AuthRepository
+import com.projeto.flagle.data.repository.BandeirasRepository
 import com.projeto.flagle.data.repository.UserRepository
 import com.projeto.flagle.ui.auth.AuthViewModel
 import com.projeto.flagle.ui.auth.AuthViewModelFactory
 import com.projeto.flagle.ui.auth.LoginScreen
-// --- FIM DOS NOVOS IMPORTS ---
 import com.projeto.flagle.ui.jogo.BandeirasViewModel
 import com.projeto.flagle.ui.jogo.BandeirasViewModelFactory
 import com.projeto.flagle.ui.jogo.TelaCadastroBandeiras
 import com.projeto.flagle.ui.jogo.TelaJogo
 import com.projeto.flagle.ui.pontuacao.TelaPontuacao
+import com.projeto.flagle.ui.ranking.RankingViewModel
+import com.projeto.flagle.ui.ranking.RankingViewModelFactory
 import com.projeto.flagle.ui.ranking.TelaRanking
-// Importando seu tema e os esquemas de cores
 import com.projeto.flagle.ui.theme.FlagleTheme
-import com.projeto.flagle.ui.theme.DarkColorScheme
-import com.projeto.flagle.ui.theme.LightColorScheme
 
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
 
+    // --- Configuração dos Repositórios e Factories ---
     val context = LocalContext.current
 
-    // --- REPOSITÓRIOS ---
-    val repository = BandeirasRepository(AppDatabase.getDatabase(context).bandeirasDAO())
-    // --- NOVOS ---
-    // (Use 'remember' para que eles não sejam recriados em cada recomposição)
+    // Repositório de Bandeiras (Room)
+    val bandeirasRepository = remember {
+        BandeirasRepository(AppDatabase.getDatabase(context).bandeirasDAO())
+    }
+    // Repositórios do Firebase (Singleton)
     val userRepository = remember { UserRepository() }
     val authRepository = remember { AuthRepository() }
 
+    // Factory do AuthViewModel
+    val authViewModelFactory = remember {
+        AuthViewModelFactory(authRepository, userRepository)
+    }
+    // Factory do BandeirasViewModel (agora precisa do UserRepository)
+    val bandeirasViewModelFactory = remember {
+        BandeirasViewModelFactory(bandeirasRepository, userRepository)
+    }
+    // --- NOVO: Factory do RankingViewModel ---
+    val rankingViewModelFactory = remember {
+        RankingViewModelFactory(userRepository, bandeirasRepository)
+    }
 
-    // --- FACTORIES ---
-    // Factory do Jogo (MODIFICADA para incluir o userRepository)
-    val bandeirasViewModelFactory = BandeirasViewModelFactory(repository, userRepository)
-    // Factory de Autenticação (NOVA)
-    val authViewModelFactory = AuthViewModelFactory(authRepository, userRepository)
-
-    // --- VIEWMODELS (No escopo da Navegação) ---
-    // ViewModel do Jogo (como estava)
-    val viewModel: BandeirasViewModel = viewModel(factory = bandeirasViewModelFactory)
-    // ViewModel de Autenticação (NOVO)
+    // Pega o AuthViewModel no nível mais alto da navegação
     val authViewModel: AuthViewModel = viewModel(factory = authViewModelFactory)
     val authState by authViewModel.uiState.collectAsState()
 
+    // --- Fim da Configuração ---
 
-    // Usando o seu FlagleTheme para aplicar o tema
+    // Define a tela inicial com base no estado de login
+    val startDestination = if (authState.loggedInUser != null) "jogo" else "login"
+
     FlagleTheme(
-        dynamicColor = false // Desativando a cor dinâmica para forçar o Light/DarkColorScheme
+        dynamicColor = false
     ) {
-
-        // --- DESTINO INICIAL DINÂMICO (MODIFICADO) ---
-        // Verifica se o usuário está logado para decidir a tela inicial
-        val startDestination = if (authState.loggedInUser != null) "jogo" else "login"
-
         NavHost(navController = navController, startDestination = startDestination) {
 
-            // --- ROTA DE LOGIN (NOVA) ---
+            // --- Rota de Login ---
             composable("login") {
                 LoginScreen(
                     authViewModel = authViewModel,
                     onLoginSuccess = {
-                        // Navega para o jogo e limpa a pilha de login
+                        // Navega para o jogo e limpa a pilha de volta
                         navController.navigate("jogo") {
                             popUpTo("login") { inclusive = true }
                         }
@@ -83,9 +81,13 @@ fun AppNavigation() {
                 )
             }
 
+            // --- Rota do Jogo ---
             composable("jogo") {
+                // Pega o BandeirasViewModel aqui
+                val bandeirasViewModel: BandeirasViewModel = viewModel(factory = bandeirasViewModelFactory)
+
                 TelaJogo(
-                    viewModel = viewModel,
+                    viewModel = bandeirasViewModel,
                     onNavigateToCadastro = {
                         navController.navigate("cadastro")
                     },
@@ -95,10 +97,10 @@ fun AppNavigation() {
                     onNavigateToPontuacao = {
                         navController.navigate("pontuacao")
                     },
-                    // --- BLOCO ATIVADO ---
-                    // Agora estamos passando a lógica de logout para a TelaJogo
+                    // --- ATUALIZADO: Passa a função de logout ---
                     onSignOut = {
                         authViewModel.signOut()
+                        // Navega de volta ao login e limpa a pilha
                         navController.navigate("login") {
                             popUpTo("jogo") { inclusive = true }
                         }
@@ -106,24 +108,33 @@ fun AppNavigation() {
                 )
             }
 
-
+            // --- Rota de Cadastro de Bandeiras ---
             composable("cadastro") {
+                // Pega o mesmo BandeirasViewModel para compartilhar o estado
+                val bandeirasViewModel: BandeirasViewModel = viewModel(factory = bandeirasViewModelFactory)
+
                 TelaCadastroBandeiras(
-                    viewModel = viewModel, // Reutiliza o mesmo ViewModel, correto!
+                    viewModel = bandeirasViewModel,
                     onNavigateBack = {
                         navController.popBackStack()
                     }
                 )
             }
 
+            // --- Rota do Ranking ---
             composable("ranking") {
+                // --- NOVO: Pega o RankingViewModel aqui ---
+                val rankingViewModel: RankingViewModel = viewModel(factory = rankingViewModelFactory)
+
                 TelaRanking(
+                    viewModel = rankingViewModel, // Passa o ViewModel
                     onNavigateBack = {
                         navController.popBackStack()
                     }
                 )
             }
 
+            // --- Rota de Pontuação ---
             composable("pontuacao") {
                 TelaPontuacao(
                     onNavigateBack = {
@@ -132,5 +143,5 @@ fun AppNavigation() {
                 )
             }
         }
-    } // Fecha o FlagleTheme
+    }
 }

@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+// --- CORRIGIDO AQUI ---
+// A data class agora tem todos os seus parâmetros
 data class BandeirasUiState(
     val listaDeBandeiras: List<Bandeiras> = emptyList(),
     val nome: String = "",
@@ -36,9 +38,8 @@ data class BandeirasUiState(
     val textoBotao: String
         get() = if (bandeirasEmEdicao == null) "Adicionar Bandeira" else "Atualizar Bandeira"
 }
+// --- FIM DA CORREÇÃO ---
 
-// --- MODIFICADO AQUI ---
-// Adicione o UserRepository no construtor
 class BandeirasViewModel(
     private val repository: BandeirasRepository,
     private val userRepository: UserRepository // Nova dependência
@@ -47,8 +48,6 @@ class BandeirasViewModel(
     private val _uiState = MutableStateFlow(BandeirasUiState())
     val uiState: StateFlow<BandeirasUiState> = _uiState.asStateFlow()
 
-    // --- NOVO AQUI ---
-    // Maneira fácil de pegar o ID do usuário logado
     private val currentUserId: String?
         get() = FirebaseAuth.getInstance().currentUser?.uid
 
@@ -85,9 +84,6 @@ class BandeirasViewModel(
         }
     }
 
-    // [Funções onNameChange, onUrlImagemChange, onContinenteChange, onEditar, onDeletar, onSalvar, LimparCampos, onModoDificuldadeChange, onPalpiteChange, onContinenteSelecionadoChange, sortearNovaBandeira]
-    // ... (Todo o seu código existente vai aqui, sem alteração) ...
-    // ...
     fun onNameChange(novoNome: String) {
         _uiState.update { it.copy(nome = novoNome.uppercase()) }
     }
@@ -215,30 +211,50 @@ class BandeirasViewModel(
             it.copy(
                 bandeiraSorteada = novaBandeira,
                 palpiteUsuario = "",
-                mensagemResultado = "",
+                mensagemResultado = "", // Limpa a mensagem ao pular/sortear
                 quadradosRevelados = quadradosIniciais
             )
         }
     }
 
-    // --- NOVO AQUI ---
     /**
-     * Calcula quantos pontos o usuário ganha com base nos quadrados revelados.
+     * Chamado quando o usuário clica em "Pular".
+     * Aplica a penalidade de -2 pontos e sorteia uma nova bandeira.
+     */
+    fun onPularClick() {
+        val state = _uiState.value
+        val userId = currentUserId
+        val continente = state.bandeiraSorteada?.continente ?: "DESCONHECIDO"
+        val pontosPerdidos = -2 // Penalidade de pular
+
+        // Só aplica a penalidade se o usuário estiver logado
+        if (userId != null) {
+            viewModelScope.launch {
+                userRepository.atualizarPontos(continente, pontosPerdidos)
+            }
+        }
+
+        // Sorteia a próxima bandeira
+        sortearNovaBandeira()
+    }
+
+    /**
+     * Calcula quantos pontos o usuário ganha com base nas regras da TelaPontuacao.
      */
     private fun calcularPontosGanhos(state: BandeirasUiState): Int {
         if (!state.modoDificil) {
-            return 10 // Pontuação fixa no modo fácil
+            return 2 // Modo Fácil (como na TelaPontuacao)
         }
 
-        // Pontuação dinâmica no modo difícil
+        // Modo Difícil (como na TelaPontuacao)
         return when (state.quadradosRevelados) {
-            0 -> 100 // Acertou de primeira
-            1 -> 80
-            2 -> 60
-            3 -> 40
-            4 -> 20
-            5 -> 10
-            else -> 5 // Acertou com tudo revelado
+            0 -> 6 // Acertou de primeira
+            1 -> 5
+            2 -> 4
+            3 -> 3
+            4 -> 2
+            5 -> 1
+            else -> 1 // Acertou com tudo revelado (6 quadrados)
         }
     }
 
@@ -255,26 +271,22 @@ class BandeirasViewModel(
         }
 
         if (palpite.equals(nomeCorreto, ignoreCase = true)) {
-            // --- MODIFICADO AQUI (ETAPA 7) ---
-            // Pegar o ID do usuário e o continente da bandeira
             val userId = currentUserId
             val continente = state.bandeiraSorteada?.continente ?: "DESCONHECIDO"
-            val pontosGanhos = calcularPontosGanhos(state)
+            val pontosGanhos = calcularPontosGanhos(state) // <-- Agora usa a lógica correta
 
             // Salvar no Firestore SE o usuário estiver logado
             if (userId != null) {
-                // Usamos o viewModelScope para chamar a função do repositório
                 viewModelScope.launch {
-                    userRepository.atualizarPontos(userId, continente, pontosGanhos)
+                    userRepository.atualizarPontos(continente, pontosGanhos)
                 }
             }
-            // --- FIM DA MODIFICAÇÃO ---
 
             // Inicia a coroutine para acertar e pular
             viewModelScope.launch {
                 _uiState.update {
                     it.copy(
-                        mensagemResultado = "Correto! +$pontosGanhos pontos!", // Mostra os pontos ganhos
+                        mensagemResultado = "Correto! +$pontosGanhos pontos!", // Mostra os pontos corrigidos
                         quadradosRevelados = 6 // Revela a imagem inteira
                     )
                 }
@@ -301,8 +313,6 @@ class BandeirasViewModel(
     }
 }
 
-// --- MODIFICADO AQUI ---
-// Adicione o UserRepository na Factory
 class BandeirasViewModelFactory(
     private val repository: BandeirasRepository,
     private val userRepository: UserRepository // Nova dependência
@@ -311,7 +321,6 @@ class BandeirasViewModelFactory(
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(BandeirasViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            // Passe o novo repositório para o ViewModel
             return BandeirasViewModel(repository, userRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")

@@ -2,7 +2,7 @@ package com.projeto.flagle.ui.ranking // Novo pacote
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed // Importamos o itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
@@ -10,34 +10,25 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.projeto.flagle.data.repository.UsuarioRankingData // Importamos a classe de dados
 
-// --- Dados Fictícios para o Esqueleto ---
-data class UsuarioRanking(val nome: String, val pontuacao: Int, val continente: String)
-
-// Lista de usuários fictícia
-val usuariosFicticios = listOf(
-    UsuarioRanking("Jogador_1", 1500, "EUROPA"),
-    UsuarioRanking("Jogador_2", 1450, "AMÉRICA"),
-    UsuarioRanking("Jogador_3", 1300, "ÁSIA"),
-    UsuarioRanking("Jogador_4", 1200, "EUROPA"),
-    UsuarioRanking("Jogador_5", 1100, "ÁFRICA"),
-    UsuarioRanking("Jogador_6", 1050, "AMÉRICA"),
-    UsuarioRanking("Jogador_7", 900, "OCEANIA"),
-).sortedByDescending { it.pontuacao } // Já deixa ordenado
-
-// Lista de continentes fictícia
-val continentesFicticios = listOf("TODOS", "AMÉRICA", "EUROPA", "ÁSIA", "ÁFRICA", "OCEANIA")
-// --- Fim dos Dados Fictícios ---
+// --- DADOS FICTÍCIOS REMOVIDOS ---
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TelaRanking(
+    viewModel: RankingViewModel, // Recebe o ViewModel
     onNavigateBack: () -> Unit
 ) {
+    // Pega o estado da UI a partir do ViewModel
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     var tabIndex by remember { mutableStateOf(0) }
     val tabs = listOf("Geral", "Por Continente")
 
-    var continenteSelecionado by remember { mutableStateOf(continentesFicticios.first()) }
+    var continenteSelecionado by remember { mutableStateOf("TODOS") }
 
     Scaffold(
         topBar = {
@@ -63,18 +54,40 @@ fun TelaRanking(
                 }
             }
 
-            // Conteúdo baseado na aba selecionada
-            when (tabIndex) {
-                // Aba "Geral"
-                0 -> RankingList(
-                    usuarios = usuariosFicticios
-                )
-                // Aba "Por Continente"
-                1 -> RankingPorContinente(
-                    continenteSelecionado = continenteSelecionado,
-                    onContinenteChange = { continenteSelecionado = it },
-                    usuarios = usuariosFicticios
-                )
+            // --- MOSTRA LOADING OU ERRO ---
+            if (uiState.isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else if (uiState.erro != null) {
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Erro: ${uiState.erro}",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            } else {
+                // Conteúdo baseado na aba selecionada
+                when (tabIndex) {
+                    // Aba "Geral"
+                    0 -> RankingList(
+                        usuarios = uiState.rankingGeral // <-- Usa dados reais
+                    )
+                    // Aba "Por Continente"
+                    1 -> RankingPorContinente(
+                        continenteSelecionado = continenteSelecionado,
+                        onContinenteChange = { continenteSelecionado = it },
+                        // Passa o mapa de ranking e a lista de continentes
+                        rankingPorContinente = uiState.rankingPorContinente,
+                        listaContinentes = uiState.listaContinentes
+                    )
+                }
             }
         }
     }
@@ -84,7 +97,7 @@ fun TelaRanking(
  * Exibe uma lista de ranking de usuários.
  */
 @Composable
-fun RankingList(usuarios: List<UsuarioRanking>, modifier: Modifier = Modifier) {
+fun RankingList(usuarios: List<UsuarioRankingData>, modifier: Modifier = Modifier) { // <-- Usa UsuarioRankingData
     if (usuarios.isEmpty()) {
         Box(
             modifier = modifier
@@ -103,8 +116,8 @@ fun RankingList(usuarios: List<UsuarioRanking>, modifier: Modifier = Modifier) {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        items(usuarios.size) { index ->
-            val usuario = usuarios[index]
+        // Usamos itemsIndexed para pegar o 'index'
+        itemsIndexed(usuarios) { index, usuario ->
             Card(
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -116,11 +129,11 @@ fun RankingList(usuarios: List<UsuarioRanking>, modifier: Modifier = Modifier) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "${index + 1}. ${usuario.nome}",
+                        text = "${index + 1}. ${usuario.nome}", // <-- Usa dados reais
                         style = MaterialTheme.typography.titleMedium
                     )
                     Text(
-                        text = "${usuario.pontuacao} pts",
+                        text = "${usuario.pontosTotais} pts", // <-- Usa dados reais
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -138,20 +151,14 @@ fun RankingList(usuarios: List<UsuarioRanking>, modifier: Modifier = Modifier) {
 fun RankingPorContinente(
     continenteSelecionado: String,
     onContinenteChange: (String) -> Unit,
-    usuarios: List<UsuarioRanking>,
+    rankingPorContinente: Map<String, List<UsuarioRankingData>>, // <-- Recebe o Mapa
+    listaContinentes: List<String>, // <-- Recebe a lista de continentes
     modifier: Modifier = Modifier
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
 
-    // Filtro fictício (no futuro, isso viria do ViewModel)
-    val usuariosFiltrados = remember(continenteSelecionado, usuarios) {
-        if (continenteSelecionado == "TODOS") {
-            usuarios
-        } else {
-            usuarios.filter { it.continente.equals(continenteSelecionado, ignoreCase = true) }
-        }
-        // A lista principal já está ordenada, então o sub-filtro também estará.
-    }
+    // Pega a lista correta do mapa, ou uma lista vazia se não houver
+    val usuariosFiltrados = rankingPorContinente[continenteSelecionado.uppercase()] ?: emptyList()
 
     Column(
         modifier = modifier
@@ -182,7 +189,8 @@ fun RankingPorContinente(
                 expanded = isMenuExpanded,
                 onDismissRequest = { isMenuExpanded = false }
             ) {
-                continentesFicticios.forEach { continente ->
+                // Usa a lista de continentes vinda do ViewModel
+                listaContinentes.forEach { continente ->
                     DropdownMenuItem(
                         text = { Text(continente.uppercase()) },
                         onClick = {
