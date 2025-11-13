@@ -7,13 +7,13 @@ import com.google.firebase.auth.FirebaseAuth
 import com.projeto.flagle.data.local.Bandeiras
 import com.projeto.flagle.data.repository.BandeirasRepository
 import com.projeto.flagle.data.repository.UserRepository
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-
 
 data class BandeirasUiState(
     val listaDeBandeiras: List<Bandeiras> = emptyList(),
@@ -25,17 +25,15 @@ data class BandeirasUiState(
     val palpiteUsuario: String = "",
     val mensagemResultado: String = "",
     val carregamentoInicialCompleto: Boolean = false,
-
     val continenteSelecionado: String = "TODOS",
     val listaContinentes: List<String> = listOf("TODOS"),
-
     val quadradosRevelados: Int = 0,
-    val modoDificil: Boolean = true
+    val modoDificil: Boolean = true,
+    val tempoRestante: Int = 30
 ) {
     val textoBotao: String
         get() = if (bandeirasEmEdicao == null) "Adicionar Bandeira" else "Atualizar Bandeira"
 }
-
 
 class BandeirasViewModel(
     private val repository: BandeirasRepository,
@@ -44,6 +42,7 @@ class BandeirasViewModel(
 
     private val _uiState = MutableStateFlow(BandeirasUiState())
     val uiState: StateFlow<BandeirasUiState> = _uiState.asStateFlow()
+    private var timerJob: Job? = null
 
     private val currentUserId: String?
         get() = FirebaseAuth.getInstance().currentUser?.uid
@@ -69,7 +68,7 @@ class BandeirasViewModel(
                             mensagemResultado = mensagem,
                             listaContinentes = continentes,
                             quadradosRevelados = quadradosIniciais
-                        )
+                        ).also { sortearNovaBandeira() }
                     } else {
                         currentState.copy(
                             listaDeBandeiras = bandeiras,
@@ -79,6 +78,25 @@ class BandeirasViewModel(
                 }
             }
         }
+    }
+
+    private fun iniciarCronometro() {
+        pararCronometro()
+        timerJob = viewModelScope.launch {
+            _uiState.update { it.copy(tempoRestante = 30) }
+            while (_uiState.value.tempoRestante > 0) {
+                delay(1000L)
+                _uiState.update { it.copy(tempoRestante = it.tempoRestante - 1) }
+            }
+
+            if (!_uiState.value.mensagemResultado.startsWith("Correto")) {
+                onPularClick(penalidade = 0) // Nao penaliza quando o tempo acaba, apenas pula
+            }
+        }
+    }
+
+    private fun pararCronometro() {
+        timerJob?.cancel()
     }
 
     fun onNameChange(novoNome: String) {
@@ -149,6 +167,7 @@ class BandeirasViewModel(
     }
 
     fun onModoDificuldadeChange(isDificil: Boolean) {
+        pararCronometro()
         _uiState.update { it.copy(modoDificil = isDificil) }
         sortearNovaBandeira()
     }
@@ -163,6 +182,7 @@ class BandeirasViewModel(
     }
 
     fun sortearNovaBandeira() {
+        pararCronometro()
         val state = _uiState.value
         val listaCompleta = state.listaDeBandeiras
         val filtro = state.continenteSelecionado
@@ -208,37 +228,37 @@ class BandeirasViewModel(
             it.copy(
                 bandeiraSorteada = novaBandeira,
                 palpiteUsuario = "",
-                mensagemResultado = "", // limpa a mensagem ao pular/sortear
+                mensagemResultado = "",
                 quadradosRevelados = quadradosIniciais
             )
         }
+
+        if (_uiState.value.modoDificil) {
+            iniciarCronometro()
+        }
     }
 
-
-    fun onPularClick() {
+    fun onPularClick(penalidade: Int = -2) {
+        pararCronometro()
         val state = _uiState.value
         val userId = currentUserId
         val continente = state.bandeiraSorteada?.continente ?: "DESCONHECIDO"
-        val pontosPerdidos = -2
 
-        if (userId != null) {
+        if (userId != null && penalidade != 0) {
             viewModelScope.launch {
-                userRepository.atualizarPontos(continente, pontosPerdidos)
+                userRepository.atualizarPontos(continente, penalidade)
             }
         }
 
-
         sortearNovaBandeira()
     }
-
 
     private fun calcularPontosGanhos(state: BandeirasUiState): Int {
         if (!state.modoDificil) {
             return 2 // Modo facil
         }
 
-        // Modo Dificil
-        return when (state.quadradosRevelados) {
+        val pontosPorTentativa = when (state.quadradosRevelados) {
             0 -> 6
             1 -> 5
             2 -> 4
@@ -247,6 +267,8 @@ class BandeirasViewModel(
             5 -> 1
             else -> 1
         }
+        val bonusTempo = (state.tempoRestante / 10).coerceIn(0, 3) // Bonus de até 3 pontos
+        return pontosPorTentativa + bonusTempo
     }
 
     fun verificarPalpite() {
@@ -262,10 +284,10 @@ class BandeirasViewModel(
         }
 
         if (palpite.equals(nomeCorreto, ignoreCase = true)) {
+            pararCronometro()
             val userId = currentUserId
             val continente = state.bandeiraSorteada?.continente ?: "DESCONHECIDO"
             val pontosGanhos = calcularPontosGanhos(state)
-
 
             if (userId != null) {
                 viewModelScope.launch {
@@ -273,16 +295,11 @@ class BandeirasViewModel(
                 }
             }
 
-
-            viewModelScope.launch {
-                _uiState.update {
-                    it.copy(
-                        mensagemResultado = "Correto! +$pontosGanhos pontos!",
-                        quadradosRevelados = 6
-                    )
-                }
-                delay(1500L)
-                sortearNovaBandeira()
+            _uiState.update {
+                it.copy(
+                    mensagemResultado = "Correto! +$pontosGanhos pontos!",
+                    quadradosRevelados = 6
+                )
             }
         } else {
             if (state.modoDificil) {
@@ -307,8 +324,7 @@ class BandeirasViewModel(
 class BandeirasViewModelFactory(
     private val repository: BandeirasRepository,
     private val userRepository: UserRepository
-) :
-    ViewModelProvider.Factory {
+) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(BandeirasViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")

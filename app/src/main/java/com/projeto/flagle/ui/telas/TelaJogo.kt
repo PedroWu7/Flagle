@@ -1,5 +1,7 @@
 package com.projeto.flagle.ui.telas
 
+import android.content.Intent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -23,6 +25,7 @@ import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -41,6 +44,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,6 +53,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -66,9 +71,47 @@ fun TelaJogo(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
+    var showResultDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    LaunchedEffect(uiState.mensagemResultado) {
+        if (uiState.mensagemResultado.startsWith("Correto")) {
+            showResultDialog = true
+        }
+    }
+
+    if (showResultDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showResultDialog = false
+                viewModel.sortearNovaBandeira()
+            },
+            title = { Text("Parabéns!") },
+            text = { Text(uiState.mensagemResultado) },
+            confirmButton = {
+                Button(onClick = {
+                    val shareIntent = Intent().apply {
+                        action = Intent.ACTION_SEND
+                        putExtra(Intent.EXTRA_TEXT, "Consegui um ótimo resultado no Flagle! Tente você também!")
+                        type = "text/plain"
+                    }
+                    context.startActivity(Intent.createChooser(shareIntent, "Compartilhar resultado"))
+                }) {
+                    Text("Compartilhar")
+                }
+            },
+            dismissButton = {
+                Button(onClick = {
+                    showResultDialog = false
+                    viewModel.sortearNovaBandeira()
+                }) {
+                    Text("Próxima Bandeira")
+                }
+            }
+        )
+    }
 
     Scaffold(
-
         topBar = {
             TopAppBar(
                 title = { Text("Flagle") },
@@ -82,7 +125,6 @@ fun TelaJogo(
                 }
             )
         },
-
         bottomBar = {
             Row(
                 modifier = Modifier
@@ -93,29 +135,17 @@ fun TelaJogo(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TextButton(onClick = onNavigateToRanking) {
-                    Icon(
-                        Icons.Default.Star,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
+                    Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Ranking")
                 }
                 TextButton(onClick = onNavigateToPontuacao) {
-                    Icon(
-                        Icons.Default.Info,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
+                    Icon(Icons.Default.Info, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Pontos")
                 }
                 TextButton(onClick = onNavigateToCadastro) {
-                    Icon(
-                        Icons.Default.Settings,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
+                    Icon(Icons.Default.Settings, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Bandeiras")
                 }
@@ -128,8 +158,6 @@ fun TelaJogo(
                 .padding(scaffoldPadding)
                 .padding(16.dp)
         ) {
-
-
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -152,26 +180,19 @@ fun TelaJogo(
                     OutlinedButton(
                         onClick = { viewModel.onModoDificuldadeChange(false) },
                         modifier = Modifier.weight(1f),
-                        border = if (modoFacil) BorderStroke(
-                            2.dp,
-                            MaterialTheme.colorScheme.primary
-                        ) else ButtonDefaults.outlinedButtonBorder
+                        border = if (modoFacil) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else ButtonDefaults.outlinedButtonBorder
                     ) {
                         Text("Fácil")
                     }
                     OutlinedButton(
                         onClick = { viewModel.onModoDificuldadeChange(true) },
                         modifier = Modifier.weight(1f),
-                        border = if (!modoFacil) BorderStroke(
-                            2.dp,
-                            MaterialTheme.colorScheme.primary
-                        ) else ButtonDefaults.outlinedButtonBorder
+                        border = if (!modoFacil) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else ButtonDefaults.outlinedButtonBorder
                     ) {
                         Text("Difícil")
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
-
 
                 var isMenuExpanded by remember { mutableStateOf(false) }
 
@@ -185,18 +206,11 @@ fun TelaJogo(
                         onValueChange = {},
                         readOnly = true,
                         label = { Text("Continente") },
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = isMenuExpanded)
-                        },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isMenuExpanded) },
                         colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth()
+                        modifier = Modifier.menuAnchor().fillMaxWidth()
                     )
-                    ExposedDropdownMenu(
-                        expanded = isMenuExpanded,
-                        onDismissRequest = { isMenuExpanded = false }
-                    ) {
+                    ExposedDropdownMenu(expanded = isMenuExpanded, onDismissRequest = { isMenuExpanded = false }) {
                         uiState.listaContinentes.forEach { continente ->
                             DropdownMenuItem(
                                 text = { Text(continente.uppercase()) },
@@ -209,15 +223,21 @@ fun TelaJogo(
                     }
                 }
 
-
                 Spacer(modifier = Modifier.height(16.dp))
+
+                AnimatedVisibility(visible = uiState.modoDificil) {
+                    Text(
+                        text = "Tempo: ${uiState.tempoRestante}",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = if (uiState.tempoRestante <= 10) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Bandeira(
                     url_imagem = uiState.bandeiraSorteada?.url_imagem ?: "",
                     quadradosRevelados = uiState.quadradosRevelados,
-                    modifier = Modifier
-                        .fillMaxWidth(0.9f)
-                        .height(200.dp)
+                    modifier = Modifier.fillMaxWidth(0.9f).height(200.dp)
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
@@ -233,22 +253,14 @@ fun TelaJogo(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-
-                val isCorrect = uiState.mensagemResultado.startsWith("Correto")
-                val resultColor = if (uiState.mensagemResultado.isEmpty()) {
-                    Color.Transparent
-                } else if (isCorrect) {
-                    Color(0xFF388E3C)
-                } else {
-                    MaterialTheme.colorScheme.error
+                if (!uiState.mensagemResultado.startsWith("Correto")) {
+                    Text(
+                        text = uiState.mensagemResultado,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.height(30.dp)
+                    )
                 }
-
-                Text(
-                    text = uiState.mensagemResultado,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = resultColor,
-                    modifier = Modifier.height(30.dp)
-                )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -257,7 +269,7 @@ fun TelaJogo(
                     horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally)
                 ) {
                     OutlinedButton(
-                        onClick = { viewModel.sortearNovaBandeira() },
+                        onClick = { viewModel.onPularClick() },
                         modifier = Modifier.weight(1f)
                     ) {
                         Text("Pular")
@@ -276,28 +288,18 @@ fun TelaJogo(
     }
 }
 
-
 @Composable
 private fun Bandeira(
     url_imagem: String,
     quadradosRevelados: Int,
     modifier: Modifier = Modifier
 ) {
-    val model = if (url_imagem.isEmpty()) {
-        "https://placehold.co/300x200/e0e0e0/7f7f7f?text=?"
-    } else {
-        url_imagem
-    }
+    val model = if (url_imagem.isEmpty()) "https://placehold.co/300x200/e0e0e0/7f7f7f?text=?" else url_imagem
 
     val indicesEmbaralhados = remember(url_imagem) { (0..5).toList().shuffled() }
 
     val indicesVisiveis = remember(quadradosRevelados, indicesEmbaralhados) {
-
-        if (quadradosRevelados >= 6) {
-            (0..5).toSet()
-        } else {
-            indicesEmbaralhados.take(quadradosRevelados).toSet()
-        }
+        if (quadradosRevelados >= 6) (0..5).toSet() else indicesEmbaralhados.take(quadradosRevelados).toSet()
     }
 
     Card(
@@ -314,14 +316,9 @@ private fun Bandeira(
                 modifier = Modifier.fillMaxSize()
             )
 
-
             Column(modifier = Modifier.fillMaxSize()) {
                 repeat(2) { rowIndex ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                    ) {
+                    Row(modifier = Modifier.fillMaxWidth().weight(1f)) {
                         repeat(3) { colIndex ->
                             val quadradoIndex = (rowIndex * 3) + colIndex
                             val isVisivel = indicesVisiveis.contains(quadradoIndex)
@@ -334,17 +331,13 @@ private fun Bandeira(
                             ) {
                                 if (!isVisivel) {
                                     Box(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                                        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceVariant),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Text(
                                             text = "${quadradoIndex + 1}",
                                             style = MaterialTheme.typography.titleLarge,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                                                alpha = 0.4f
-                                            )
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                                         )
                                     }
                                 }
@@ -357,11 +350,9 @@ private fun Bandeira(
     }
 }
 
-
 @Preview(showBackground = true)
 @Composable
 fun TelaJogoPreview() {
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -371,13 +362,9 @@ fun TelaJogoPreview() {
         Text("FLAGLE", style = MaterialTheme.typography.displayMedium)
         Spacer(modifier = Modifier.height(16.dp))
         Row {
-            OutlinedButton(onClick = { /* */ }, modifier = Modifier.weight(1f)) {
-                Text("Fácil")
-            }
+            OutlinedButton(onClick = { /* */ }, modifier = Modifier.weight(1f)) { Text("Fácil") }
             Spacer(modifier = Modifier.width(16.dp))
-            OutlinedButton(onClick = { /* */ }, modifier = Modifier.weight(1f)) {
-                Text("Difícil")
-            }
+            OutlinedButton(onClick = { /* */ }, modifier = Modifier.weight(1f)) { Text("Difícil") }
         }
         Spacer(modifier = Modifier.height(16.dp))
         OutlinedTextField(
@@ -389,10 +376,7 @@ fun TelaJogoPreview() {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-                .background(Color.Gray),
+            modifier = Modifier.fillMaxWidth().height(200.dp).background(Color.Gray),
             contentAlignment = Alignment.Center
         ) {
             Text("Placeholder Bandeira")
@@ -412,13 +396,9 @@ fun TelaJogoPreview() {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Row {
-            OutlinedButton(onClick = { /* */ }, modifier = Modifier.weight(1f)) {
-                Text("Pular")
-            }
+            OutlinedButton(onClick = { /* */ }, modifier = Modifier.weight(1f)) { Text("Pular") }
             Spacer(modifier = Modifier.width(16.dp))
-            Button(onClick = { /* */ }, modifier = Modifier.weight(1f)) {
-                Text("Adivinhar")
-            }
+            Button(onClick = { /* */ }, modifier = Modifier.weight(1f)) { Text("Adivinhar") }
         }
     }
 }
